@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ikusagami Kodoku Live - Interactive Historical Map</title>
+    <meta name="description" content="Interactive historical map based on the novel Ikusagami (Last Samurai Standing) visualizing the deadly competition known as Kodoku along the Tokaido road in 1878 Japan.">
+    
+    <!-- MapLibre GL JS CSS from CDN -->
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>Ikusagami: Kodoku Competition 1878</h1>
+            <p class="subtitle">The Last Samurai Standing - Interactive Historical Map</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="info-panel">
+                    <h2>About Kodoku</h2>
+                    <p>The Kodoku competition follows the deadly journey along the historic Tokaido road, connecting Edo (Tokyo) to Kyoto in 1878 Japan.</p>
+                    
+                    <h3>Timeline</h3>
+                    <div id="timeline" class="timeline">
+                        <!-- Timeline will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="legend">
+                        <h3>Legend</h3>
+                        <div class="legend-item">
+                            <span class="legend-symbol route"></span>
+                            <span>Tokaido Road</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-symbol station"></span>
+                            <span>Station Town</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-symbol event"></span>
+                            <span>Key Event</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <div id="map"></div>
+                
+                <!-- Map Controls -->
+                <div class="map-controls">
+                    <button id="resetView" class="control-button">Reset View</button>
+                    <button id="toggleRoute" class="control-button active">Show Route</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Detail Modal -->
+        <div id="eventModal" class="modal hidden">
+            <div class="modal-content">
+                <button class="modal-close" id="closeModal">&times;</button>
+                <h2 id="modalTitle"></h2>
+                <div id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MapLibre GL JS from CDN -->
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    
+    <!-- Application JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
