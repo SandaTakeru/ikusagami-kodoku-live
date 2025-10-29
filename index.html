@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イクサガミ蠱毒Live</title>
+    
+    <!-- MapLibre GL JS -->
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Map Container -->
+    <div id="map"></div>
+    
+    <!-- Site Title -->
+    <div class="site-header">
+        <h1 class="site-title">イクサガミ蠱毒Live(β)</h1>
+        <a href="#" id="info-link" class="info-icon" title="このサイトについて">ⓘ</a>
+    </div>
+    
+    <!-- Hamburger Menu -->
+    <div id="menu-container">
+        <button id="hamburger-btn" class="hamburger-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        
+        <div id="menu-panel" class="menu-panel">
+            <!-- ネタバレフィルタ -->
+            <div class="menu-section">
+                <h4>ネタバレフィルタ</h4>
+                <select id="spoiler-filter" class="spoiler-select">
+                    <option value="1">イクサガミ天（1巻読了）</option>
+                    <option value="2">イクサガミ地（2巻読了）</option>
+                    <option value="3">イクサガミ人（3巻読了）</option>
+                    <option value="4" selected>イクサガミ神（4巻読了）</option>
+                </select>
+            </div>
+            
+            <!-- 日英トグル -->
+            <div class="menu-section">
+                <h4>言語 / Language</h4>
+                <div class="toggle-switch">
+                    <button id="lang-ja" class="toggle-btn active">日本語</button>
+                    <button id="lang-en" class="toggle-btn">English</button>
+                </div>
+            </div>
+            
+            <!-- 背景地図切り替え -->
+            <div class="menu-section">
+                <h4>背景地図 / Base Map</h4>
+                <div class="map-toggle">
+                    <button id="map-ryoseikoku" class="toggle-btn active">令制国</button>
+                    <button id="map-none" class="toggle-btn">背景なし</button>
+                    <button id="map-rekichizu" class="toggle-btn">れきちず</button>
+                    <button id="map-osm" class="toggle-btn">OSM</button>
+                    <button id="map-gsi-std" class="toggle-btn">地理院タイル<br/>標準地図</button>
+                    <button id="map-gsi-english" class="toggle-btn" style="display:none;">GSI<br/>English</button>
+                    <button id="map-gsi-seamless" class="toggle-btn">地理院タイル<br/>全国最新写真</button>
+                </div>
+            </div>
+            
+            <!-- キャラクタフィルタ -->
+            <div class="menu-section">
+                <h4>キャラクターフィルタ</h4>
+                <div id="character-filters">
+                    <!-- キャラクターのチェックボックスをJSで動的に生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Character Tracking Card -->
+    <div id="tracking-card" class="tracking-card" style="display: none;">
+        <button id="tracking-close" class="tracking-close" title="閉じる">×</button>
+        <div class="tracking-content">
+            <div class="tracking-header">
+                <span id="tracking-id" class="tracking-id">木札No. —</span>
+                <h3 id="tracking-name" class="tracking-name">キャラクター名</h3>
+                <span id="tracking-score" class="tracking-score">— 点</span>
+            </div>
+            <div class="tracking-body">
+                <div class="tracking-info">
+                    <span id="tracking-last-info" class="tracking-value">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Slider -->
+    <div id="timeline-container" class="timeline-container">
+        <button id="speed-down" class="control-btn" title="速度ダウン">◀◀</button>
+        <button id="play-btn" class="control-btn" title="再生/一時停止">
+            <span class="icon-play">▶</span>
+            <span class="icon-pause" style="display:none;">⏸</span>
+        </button>
+        <button id="speed-up" class="control-btn" title="速度アップ">▶▶</button>
+        <input type="range" id="timeline-slider" class="timeline-slider" 
+               min="0" max="100" value="0" step="any">
+        <div id="current-datetime" class="current-datetime">
+            <div class="datetime-date">明治11年05月05日</div>
+            <div class="datetime-time">午前00時00分</div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Modules -->
+    <script src="js/config.js"></script>
+    
+    <!-- Utility Functions (Logger must be loaded first) -->
+    <script src="js/utils/logger.js"></script>
+    <script src="js/utils/geometryUtils.js"></script>
+    <script src="js/utils/interpolationUtils.js"></script>
+    
+    <!-- Core Modules -->
+    <script src="js/map.js"></script>
+    <script src="js/characterData.js"></script>
+    <script src="js/routeDisplay.js"></script>
+    
+    <!-- Character Features -->
+    <script src="js/characterMarkers.js"></script>
+    <script src="js/characterTracking.js"></script>
+    <script src="js/characterFilter.js"></script>
+    
+    <!-- UI Controls -->
+    <script src="js/timeControl.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
