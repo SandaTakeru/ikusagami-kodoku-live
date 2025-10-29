@@ -191,14 +191,12 @@ body {
     gap: 4px;
     padding: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease, opacity 0.3s ease;
-    opacity: 0.8;
+    transition: all 0.3s ease;
 }
 
 .hamburger-btn:hover {
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    opacity: 1;
 }
 
 .hamburger-btn span {
@@ -228,7 +226,7 @@ body {
     top: 46px;
     left: 0;
     width: 280px;
-    max-height: 70vh;
+    max-height: calc(70vh + 200px);
     background: rgba(255, 255, 255, 0.98);
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
@@ -237,17 +235,13 @@ body {
     transform: translateX(-100%);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.4s ease, opacity 0.3s ease;
+    transition: all 0.4s ease;
 }
 
 .menu-panel.show {
     transform: translateX(0);
-    opacity: 0.8;
-    visibility: visible;
-}
-
-.menu-panel.show:hover {
     opacity: 1;
+    visibility: visible;
 }
 
 .menu-panel h3 {
@@ -830,23 +824,216 @@ body {
 }
 
 /* ========================================
-   レスポンシブ対応（将来用）
+   レスポンシブ対応（スマホ版）
    ======================================== */
 @media (max-width: 768px) {
+    /* サイトヘッダーの調整 */
+    .site-header {
+        top: 10px;
+        left: 44px;
+        gap: 4px;
+        height: auto;
+    }
+    
+    .site-title {
+        font-size: 14px;
+        line-height: 1.3;
+    }
+    
+    .info-icon {
+        width: 16px;
+        height: 16px;
+        font-size: 13px;
+    }
+    
+    /* ハンバーガーメニューコンテナの調整 */
+    #menu-container {
+        top: 10px;
+        left: 10px;
+    }
+    
+    /* ハンバーガーボタンの調整 */
+    .hamburger-btn {
+        width: 28px;
+        height: 28px;
+        padding: 6px;
+        gap: 3px;
+    }
+    
+    .hamburger-btn span {
+        width: 16px;
+        height: 2px;
+    }
+    
+    /* ハンバーガーボタンのアクティブ状態（×印）の調整 */
+    .hamburger-btn.active span:nth-child(1) {
+        transform: rotate(45deg) translate(3.4px, 3.4px);
+    }
+    
+    .hamburger-btn.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(3.4px, -3.4px);
+    }
+    
+    /* メニューパネルのフォントサイズ調整 */
+    .menu-panel {
+        font-size: 12px;
+        padding: 12px;
+    }
+    
+    .menu-section {
+        margin-bottom: 12px;
+    }
+    
+    .menu-section h4 {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    
+    .menu-section label {
+        font-size: 11px;
+        padding: 3px 0;
+    }
+    
+    .menu-section input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+    }
+    
+    /* トグルボタンのサイズ調整 */
+    .toggle-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    
+    .map-toggle .toggle-btn {
+        padding: 6px 6px;
+        font-size: 10px;
+    }
+    
+    /* セレクトボックスのサイズ調整 */
+    .spoiler-select {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    
+    /* キャラクターアイコンのサイズ調整 */
+    .debug-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        border-width: 1.5px;
+    }
+    
+    .score-change {
+        top: -20px;
+        font-size: 14px;
+    }
+    
+    /* タイムラインコンテナの調整 */
     .timeline-container {
         left: 10px;
         right: 10px;
         width: auto;
         bottom: 20px;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 10px;
+        row-gap: 8px;
     }
     
+    /* コントロールボタンのサイズ調整 */
+    .control-btn {
+        order: 1;
+        width: 24px;
+        height: 24px;
+        font-size: 9px;
+    }
+    
+    /* 日時表示を再生ボタンの右横に配置（縦並び） */
+    .current-datetime {
+        order: 2;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-size: 10px;
+        min-width: auto;
+        flex: 1;
+        padding: 0 4px;
+        line-height: 1.3;
+    }
+    
+    .datetime-date {
+        font-size: 10px;
+        white-space: nowrap;
+    }
+    
+    .datetime-time {
+        font-size: 9px;
+        white-space: nowrap;
+    }
+    
+    /* タイムラインスライダーの幅とサイズを調整 */
+    .timeline-slider {
+        width: 100%;
+        order: 3;
+        height: 5px;
+        margin: 0;
+    }
+    
+    .timeline-slider::-webkit-slider-thumb {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .timeline-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+    }
+    
+    /* 縮尺バーを非表示 */
+    .maplibregl-ctrl-scale {
+        display: none !important;
+    }
+    
+    /* メニューパネルの調整 */
     .menu-panel {
         width: calc(100vw - 40px);
         max-width: 320px;
+        max-height: calc(100vh - 220px); /* 200px拡張 */
     }
     
+    /* トラッキングカードの調整 */
     .tracking-card {
         max-width: calc(100vw - 40px);
-        bottom: 140px;
+        bottom: 100px;
+        height: 140px;
+    }
+    
+    .tracking-header {
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+    }
+    
+    .tracking-id {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+    
+    .tracking-name {
+        font-size: 14px;
+    }
+    
+    .tracking-score {
+        font-size: 15px;
+    }
+    
+    .tracking-info {
+        font-size: 11px;
+    }
+    
+    .tracking-value {
+        font-size: 11px;
+        line-height: 1.4;
     }
 }

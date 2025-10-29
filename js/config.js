@@ -25,8 +25,8 @@ const VOLUME_END_DATES = {
  * 実時間1秒あたりに進む仮想時間（分単位）
  * 1分、5分、30分、60分、180分、720分、1440分
  */
-const SPEED_OPTIONS = [1, 5, 30, 60, 180, 720, 1440];
-const DEFAULT_SPEED_INDEX = 3; // デフォルトは60分（インデックス3）
+const SPEED_OPTIONS = [-60, -30, -5, -1, 1, 5, 30, 60, 180, 720, 1440];
+const DEFAULT_SPEED_INDEX = 7; // デフォルトは60分（インデックス7）
 
 /**
  * アプリケーション状態

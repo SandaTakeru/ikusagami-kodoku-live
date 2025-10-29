@@ -157,12 +157,12 @@ function initMap() {
     let initialCenter, initialZoom;
     
     if (isMobile) {
-        // スマホサイズ: 天龍寺から三条大橋
+        // スマホサイズ: 天龍寺から草津宿まで広域表示（天龍寺が見切れないように）
         initialCenter = [
-            (tenryujiCoords[0] + sanjoCoords[0]) / 2,
-            (tenryujiCoords[1] + sanjoCoords[1]) / 2
+            (tenryujiCoords[0] + kusatsuCoords[0]) / 2,
+            (tenryujiCoords[1] + kusatsuCoords[1]) / 2
         ];
-        initialZoom = 11.5;
+        initialZoom = 9; // ズームレベルを一段下げて広域表示
     } else {
         // PCサイズ: 天龍寺から草津宿
         initialCenter = [

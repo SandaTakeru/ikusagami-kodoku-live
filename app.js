@@ -6,8 +6,8 @@ let isPlaying = false;
 let animationFrame = null;
 
 // 再生速度の設定（実時間1秒あたりに進む仮想時間：分単位）
-const SPEED_OPTIONS = [1, 5, 30, 60, 180, 720, 1440]; // 1分、5分、30分、60分、180分、720分、1440分
-let speedIndex = 3; // デフォルトは60分（インデックス3）
+const SPEED_OPTIONS = [-60, -30, -5, -1, 1, 5, 30, 60, 180, 720, 1440]; // 1分、5分、30分、60分、180分、720分、1440分
+let speedIndex = 7; // デフォルトは60分（インデックス7）
 let playbackSpeed = SPEED_OPTIONS[speedIndex];
 
 // 時間範囲の設定（明治11年5月5日0時 〜 明治11年6月7日0時）

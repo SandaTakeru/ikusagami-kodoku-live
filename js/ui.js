@@ -42,7 +42,7 @@ const UI_TEXTS = {
         ampm: ['午前', '午後']
     },
     en: {
-        siteTitle: 'Last Samurai Standing Kodoku Live',
+        siteTitle: 'Last Samurai Standing<br>Kodoku Live',
         spoilerFilterTitle: 'Spoiler Filter',
         spoilerOptions: [
             'Last Samurai Standing TEN (Vol.1)',
@@ -315,7 +315,7 @@ function updateUILanguage(lang) {
     // サイトタイトル
     const siteTitle = document.querySelector('.site-title');
     if (siteTitle) {
-        siteTitle.textContent = texts.siteTitle;
+        siteTitle.innerHTML = texts.siteTitle;
     }
     
     // インフォメーションアイコンのタイトル
