@@ -75,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // 地図が準備できるまで待機してから初期化
         const waitForMap = () => {
             if (map) {
-                mainLogger.info('ルート表示の初期化を開始');
                 initRouteDisplay();
             } else {
                 setTimeout(waitForMap, 100);
@@ -109,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // タイムアウト: 最長500msでキャラクターマーカーを表示（高速化）
             setTimeout(() => {
                 if (!markersInitialized && map) {
-                    mainLogger.info('タイムアウト: 地図読み込み前にキャラクターマーカーを表示します');
                     initMarkers();
                 }
             }, 500);
@@ -119,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!map) {
             setTimeout(() => {
                 if (!markersInitialized && map) {
-                    mainLogger.info('地図作成後にキャラクターマーカーを表示します');
                     if (map.isStyleLoaded()) {
                         initMarkers();
                     } else {
@@ -128,7 +125,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 200);
         }
-    } else {
-        mainLogger.info('初期化完了');
     }
 });

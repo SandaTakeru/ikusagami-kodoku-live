@@ -39,36 +39,30 @@ function scheduleLayerRetries() {
     retryTimers.forEach(timer => clearTimeout(timer));
     retryTimers = [];
     
-    // リトライのタイミング（ミリ秒）: 1秒、3秒、5秒、10秒、20秒、30秒
-    const retryIntervals = [1000, 3000, 5000, 10000, 20000, 30000];
+    // リトライのタイミング（ミリ秒）を削減: 1秒、5秒、10秒
+    const retryIntervals = [1000, 5000, 10000];
     
     retryIntervals.forEach((interval, index) => {
         const timer = setTimeout(() => {
-            // レイヤーが既に表示されていればスキップ
             if (areLayersVisible()) {
-                routeLogger.info(`リトライ不要: レイヤーは既に表示されています (${interval/1000}秒後)`);
+                routeLogger.debug(`リトライ不要 (${interval/1000}秒後)`);
                 return;
             }
             
-            routeLogger.info(`定期リトライ ${index + 1}/${retryIntervals.length}: レイヤー追加を試行 (${interval/1000}秒後)`);
+            routeLogger.info(`レイヤー追加を再試行 (${index + 1}/${retryIntervals.length})`);
             
             if (map && map.isStyleLoaded() && routeData && syukubaData) {
                 try {
                     addRouteLayer();
                     addSyukubaLayer();
-                    routeLogger.info('定期リトライでレイヤー追加成功');
                 } catch (error) {
-                    routeLogger.error('定期リトライでエラー:', error);
+                    routeLogger.error('レイヤー追加エラー:', error);
                 }
-            } else {
-                routeLogger.warn('リトライ条件未達: map, routeData, syukubaDataを確認してください');
             }
         }, interval);
         
         retryTimers.push(timer);
     });
-    
-    routeLogger.info('定期リトライスケジューラーを設定しました (1秒, 3秒, 5秒, 10秒, 20秒, 30秒後)');
 }
 
 /**
@@ -91,21 +85,20 @@ async function initRouteDisplay() {
         if (map.isStyleLoaded() && routeData && syukubaData) {
             addRouteLayer();
             addSyukubaLayer();
-            routeLogger.info('ルートと宿場のレイヤー追加完了');
+            routeLogger.info('レイヤー追加完了');
             return true;
         }
         return false;
     };
 
-    // 地図のスタイルが読み込まれるまで待機
+    // 即座にレイヤー追加を試行
     if (tryAddLayers()) {
-        scheduleLayerRetries(); // 定期リトライを設定
+        scheduleLayerRetries();
         return;
     }
 
-    // loadイベントとstyledataイベントの両方を待機
+    // イベントリスナーでレイヤー追加を試行
     let layersAdded = false;
-    
     const addLayersOnce = () => {
         if (!layersAdded && tryAddLayers()) {
             layersAdded = true;
@@ -114,14 +107,6 @@ async function initRouteDisplay() {
 
     map.on('load', addLayersOnce);
     map.on('styledata', addLayersOnce);
-
-    // フォールバック: 一定時間後に再試行（タイムアウト対策）
-    setTimeout(() => {
-        if (!layersAdded) {
-            routeLogger.info('タイムアウト後のレイヤー追加を試行');
-            addLayersOnce();
-        }
-    }, 1000);
     
     // 定期リトライスケジューラーを設定
     scheduleLayerRetries();
@@ -168,10 +153,8 @@ function addRouteLayer() {
             type: 'geojson',
             data: routeData
         });
-        routeLogger.info('ルートソースを追加');
     } else {
         map.getSource('route-source').setData(routeData);
-        routeLogger.info('ルートソースを更新');
     }
 
     // 既存のレイヤーを削除
@@ -262,21 +245,16 @@ function addRouteLayer() {
         }
     });
 
-    routeLogger.info('ルートレイヤーの追加完了');
 }
 
 /**
  * 宿場レイヤーをマップに追加
  */
 function addSyukubaLayer() {
-    routeLogger.info('addSyukubaLayer() called');
-    
     if (!syukubaData) {
         routeLogger.error('Syukuba data not loaded');
         return;
     }
-    
-    routeLogger.info(`宿場データ: ${syukubaData.features.length} features`);
 
     // ソースを追加または更新
     if (!map.getSource('syukuba-source')) {
@@ -284,10 +262,8 @@ function addSyukubaLayer() {
             type: 'geojson',
             data: syukubaData
         });
-        routeLogger.info('宿場ソースを追加');
     } else {
         map.getSource('syukuba-source').setData(syukubaData);
-        routeLogger.info('宿場ソースを更新');
     }
 
     // 既存のレイヤーを削除
@@ -298,7 +274,6 @@ function addSyukubaLayer() {
         'syukuba-sekisho-center',
         'syukuba-label',
         'syukuba-sekisho-label',
-        'syukuba-sekisho-point-bg',
         'syukuba-sekisho-point-label'
     ];
     
@@ -400,20 +375,7 @@ function addSyukubaLayer() {
         }
     });
 
-    // 関所の通過点数ラベル用の黒丸背景
-    map.addLayer({
-        id: 'syukuba-sekisho-point-bg',
-        type: 'circle',
-        source: 'syukuba-source',
-        filter: ['>', ['get', '蠱毒通過点数'], 0],
-        paint: {
-            'circle-radius': 18,
-            'circle-color': '#000000',
-            'circle-translate': [0, -32]
-        }
-    });
-
-    // 関所の通過点数ラベル（縦書き）
+    // 関所の通過点数ラベル（縦書き、白文字に黒縁取り）
     map.addLayer({
         id: 'syukuba-sekisho-point-label',
         type: 'symbol',
@@ -422,17 +384,17 @@ function addSyukubaLayer() {
         layout: {
             'text-field': ['concat', ['get', '漢字_蠱毒通過点数'], '点'],
             'text-font': ['Noto Sans Bold'],
-            'text-size': 9,
-            'text-offset': [-3.5, 0],
+            'text-size': 14,
+            'text-offset': [-3, 0],
             'text-anchor': 'center',
             'text-writing-mode': ['vertical']
         },
         paint: {
-            'text-color': '#FFFFFF'
+            'text-color': '#333333',
+            'text-halo-color': '#FFFFFF',
+            'text-halo-width': 1.5
         }
     });
-
-    routeLogger.info('宿場レイヤーの追加完了');
 }
 
 /**
@@ -460,13 +422,11 @@ function readdRouteLayer() {
         if (map.isStyleLoaded()) {
             addRouteLayer();
             addSyukubaLayer();
-            routeLogger.info('ルートと宿場のレイヤー再追加完了');
         } else if (retryCount < maxRetries) {
             retryCount++;
             setTimeout(addLayers, 50);
         } else {
-            routeLogger.error('スタイル読み込みのタイムアウト: レイヤー追加を中止');
-            routeLogger.info('定期リトライで回復を試みます');
+            routeLogger.warn('スタイル読み込みタイムアウト（定期リトライで回復を試みます）');
         }
     };
     

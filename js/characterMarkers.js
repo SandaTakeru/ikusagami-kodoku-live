@@ -151,34 +151,16 @@ function buildCharacterTimelines() {
     if (!allPointsData) return;
     
     let invalidCount = 0;
-    const invalidReasons = [];
     
     // キャラクターIDごとにグループ化
-    allPointsData.features.forEach((feature, index) => {
+    allPointsData.features.forEach((feature) => {
         // 無効なフィーチャーをスキップ
-        if (!feature) {
+        if (!feature?.properties?.character_id || !feature.geometry?.coordinates) {
             invalidCount++;
-            invalidReasons.push(`Feature #${index}: null or undefined`);
-            return;
-        }
-        if (!feature.properties) {
-            invalidCount++;
-            invalidReasons.push(`Feature #${index}: missing properties`);
-            return;
-        }
-        if (!feature.geometry || !feature.geometry.coordinates) {
-            invalidCount++;
-            invalidReasons.push(`Feature #${index}: missing geometry or coordinates`);
             return;
         }
         
         const characterId = feature.properties.character_id;
-        
-        if (!characterId) {
-            invalidCount++;
-            invalidReasons.push(`Feature #${index}: missing character_id`);
-            return;
-        }
         
         if (!characterTimelines[characterId]) {
             characterTimelines[characterId] = [];
@@ -196,25 +178,20 @@ function buildCharacterTimelines() {
     });
     
     if (invalidCount > 0) {
-        markerLogger.warn(`Skipped ${invalidCount} invalid feature(s) in points.geojson`);
-        if (invalidReasons.length > 0 && invalidReasons.length <= 5) {
-            // 5件以下の場合は詳細を表示
-            invalidReasons.forEach(reason => markerLogger.debug(`  - ${reason}`));
-        }
+        markerLogger.warn(`${invalidCount}件の無効なポイントをスキップ`);
     }
     
     // 各タイムラインを時刻順にソートし、最終タイムスタンプを記録
     Object.keys(characterTimelines).forEach(characterId => {
         characterTimelines[characterId].sort((a, b) => a.timestamp - b.timestamp);
         
-        // 最終タイムスタンプを記録（最後のフィーチャーの時刻）
         const timeline = characterTimelines[characterId];
         if (timeline.length > 0) {
             characterLastTimestamps[characterId] = timeline[timeline.length - 1].timestamp;
         }
     });
     
-    markerLogger.info(`Built timelines for ${Object.keys(characterTimelines).length} characters`);
+    markerLogger.info(`${Object.keys(characterTimelines).length}キャラクターのタイムラインを構築`);
 }
 
 /**

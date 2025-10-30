@@ -240,45 +240,20 @@ function changeBaseMapStyle(styleKey) {
     
     // れきちずの場合は完全なスタイル変更が必要（MapLibre の制約）
     if (styleKey === 'rekichizu') {
-        const currentCenter = map.getCenter();
-        const currentZoom = map.getZoom();
-        const currentBearing = map.getBearing();
-        const currentPitch = map.getPitch();
+        const viewState = {
+            center: map.getCenter(),
+            zoom: map.getZoom(),
+            bearing: map.getBearing(),
+            pitch: map.getPitch()
+        };
         
-        let layersAdded = false;
-        
-        // styledataイベントでレイヤー追加を試行
+        // スタイル変更後にビューステートとレイヤーを復元
         map.once('styledata', () => {
-            map.jumpTo({
-                center: currentCenter,
-                zoom: currentZoom,
-                bearing: currentBearing,
-                pitch: currentPitch
-            });
-            
-            // スタイルがロードされてからルートとシュクバレイヤーを再追加
+            map.jumpTo(viewState);
             if (typeof readdRouteLayer === 'function') {
                 readdRouteLayer();
-                layersAdded = true;
             }
         });
-        
-        // loadイベントでもバックアップ試行
-        map.once('load', () => {
-            if (!layersAdded && typeof readdRouteLayer === 'function') {
-                mapLogger.info('れきちず: loadイベントでレイヤー追加を試行');
-                readdRouteLayer();
-                layersAdded = true;
-            }
-        });
-        
-        // タイムアウト後にもバックアップ試行
-        setTimeout(() => {
-            if (!layersAdded && typeof readdRouteLayer === 'function') {
-                mapLogger.info('れきちず: タイムアウト後にレイヤー追加を試行');
-                readdRouteLayer();
-            }
-        }, 2000);
         
         map.setStyle(styleConfig.style);
         return;
@@ -286,11 +261,10 @@ function changeBaseMapStyle(styleKey) {
     
     // れきちずから他のスタイルへ切り替える場合
     if (isFromRekichizu) {
-        mapLogger.info('れきちずから切り替え: レイヤーをクリーンアップ');
+        mapLogger.debug('れきちずのレイヤーをクリーンアップ');
         
         // れきちずのレイヤーを削除（route/syukuba以外）
-        const allLayers = map.getStyle().layers;
-        allLayers.forEach(layer => {
+        map.getStyle().layers.forEach(layer => {
             const isRouteOrSyukuba = layer.id.startsWith('route-') || layer.id.startsWith('syukuba-');
             if (!isRouteOrSyukuba && map.getLayer(layer.id)) {
                 map.removeLayer(layer.id);
@@ -298,8 +272,7 @@ function changeBaseMapStyle(styleKey) {
         });
         
         // れきちずのソースを削除（route/syukuba以外）
-        const allSources = Object.keys(map.getStyle().sources);
-        allSources.forEach(sourceId => {
+        Object.keys(map.getStyle().sources).forEach(sourceId => {
             if (sourceId !== 'route-source' && sourceId !== 'syukuba-source' && map.getSource(sourceId)) {
                 map.removeSource(sourceId);
             }
@@ -307,18 +280,10 @@ function changeBaseMapStyle(styleKey) {
     }
     
     // 既存の背景レイヤーとソースを削除
-    const backgroundLayerIds = ['osm', 'gsi-std', 'gsi-english', 'gsi-seamless'];
-    backgroundLayerIds.forEach(layerId => {
-        if (map.getLayer(layerId)) {
-            map.removeLayer(layerId);
-        }
-    });
-    
-    const backgroundSourceIds = ['osm', 'gsi-std', 'gsi-english', 'gsi-seamless'];
-    backgroundSourceIds.forEach(sourceId => {
-        if (map.getSource(sourceId)) {
-            map.removeSource(sourceId);
-        }
+    const backgroundIds = ['osm', 'gsi-std', 'gsi-english', 'gsi-seamless'];
+    backgroundIds.forEach(id => {
+        if (map.getLayer(id)) map.removeLayer(id);
+        if (map.getSource(id)) map.removeSource(id);
     });
     
     // 令制国レイヤーの表示/非表示を制御
@@ -351,15 +316,12 @@ function changeBaseMapStyle(styleKey) {
     // 新しい背景ソースを追加
     if (!map.getSource(sourceKey)) {
         map.addSource(sourceKey, newStyle.sources[sourceKey]);
-        mapLogger.info(`背景ソース追加: ${sourceKey}`);
     }
     
     // 新しい背景レイヤーを追加（最下層に配置）
     if (!map.getLayer(layerConfig.id)) {
-        // 最初のレイヤーの前に挿入（最下層）
         const firstLayer = map.getStyle().layers[0];
         map.addLayer(layerConfig, firstLayer ? firstLayer.id : undefined);
-        mapLogger.info(`背景レイヤー追加: ${layerConfig.id}`);
     }
     
     // ルートとシュクバレイヤーを再追加して最前面に
@@ -383,7 +345,7 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
             return response.json();
         })
         .then(data => {
-            mapLogger.info(`令制国GeoJSONの読み込み完了: ${data.features.length} features`);
+            mapLogger.info(`令制国データ読み込み完了: ${data.features.length}件`);
             
             // ソースを追加
             if (!map.getSource('ryoseikoku-source')) {
@@ -391,7 +353,6 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                     type: 'geojson',
                     data: data
                 });
-                mapLogger.info('令制国ソースを追加');
             }
             
             // ルートレイヤーがあればその前に、なければ最背面に配置
@@ -408,7 +369,6 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'fill-opacity': 1
                     }
                 }, routeLayerId);
-                mapLogger.info('令制国塗りつぶしレイヤーを追加');
             }
             
             // 境界線レイヤーを追加
@@ -422,7 +382,6 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'line-width': 2
                     }
                 }, routeLayerId);
-                mapLogger.info('令制国境界線レイヤーを追加');
             }
             
             // ラベルレイヤーを追加
@@ -436,11 +395,15 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'text-size': 20,
                         'text-font': ['Noto Sans CJK JP Regular'],
                         'text-writing-mode': ['vertical'],
-                        'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
-                        'text-radial-offset': 0.5,
+                        'symbol-placement': 'point',
+                        'symbol-avoid-edges': true,
+                        'text-variable-anchor': ['center'],
+                        'text-radial-offset': 0,
                         'text-justify': 'auto',
                         'text-allow-overlap': false,
-                        'text-optional': true
+                        'text-optional': true,
+                        'text-padding': 100,
+                        'symbol-spacing': 500
                     },
                     paint: {
                         'text-color': '#362F2D',
@@ -448,7 +411,6 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'text-halo-width': 2
                     }
                 }, routeLayerId);
-                mapLogger.info('令制国ラベルレイヤーを追加');
             }
             
             // ルートレイヤーとシュクバレイヤーが追加されていない場合は追加
