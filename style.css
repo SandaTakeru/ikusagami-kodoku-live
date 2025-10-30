@@ -13,6 +13,14 @@ body {
     width: 100vw;
     height: 100vh;
     background-color: #C9BA96;
+    touch-action: pan-x pan-y;
+    -ms-touch-action: pan-x pan-y;
+}
+
+button {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* ========================================
@@ -192,6 +200,8 @@ body {
     padding: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
 }
 
 .hamburger-btn:hover {
@@ -397,6 +407,8 @@ body {
     justify-content: center;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
 }
 
 .control-btn:hover {
