@@ -30,11 +30,20 @@ let lastSliderPosition = 0;
  * @returns {string} フォーマットされた日時文字列
  */
 function formatDateTime(date) {
-    // 月日のみのシンプルな表示
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    const lang = window.currentLanguage || 'ja';
+    const texts = UI_TEXTS[lang];
     
-    return `${month}月${day}日`;
+    if (lang === 'en') {
+        // 英語: "May 5"
+        const monthName = texts.months[date.getMonth()];
+        const day = date.getDate();
+        return `${monthName} ${day}`;
+    } else {
+        // 日本語: "5月5日"
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        return `${month}月${day}日`;
+    }
 }
 
 /**
@@ -181,15 +190,19 @@ function updateTrackingInfo() {
     const scoreEl = document.getElementById('tracking-score');
     const lastInfoEl = document.getElementById('tracking-last-info');
 
+    // 現在の言語を取得
+    const lang = window.currentLanguage || 'ja';
+    const texts = UI_TEXTS[lang];
+
     // キャラクター名とID
-    nameEl.textContent = character.name;
-    idEl.textContent = `木札No. ${currentTrackingCharacterId}`;
+    nameEl.textContent = lang === 'en' ? character.nameEn : character.name;
+    idEl.textContent = `${texts.trackingId} ${currentTrackingCharacterId}`;
 
     if (validPoints.length > 0) {
         // 最新の点数を表示（1件目）
         const latestPoint = validPoints[0];
         const score = latestPoint.properties.score;
-        scoreEl.textContent = `${score} 点`;
+        scoreEl.textContent = `${score} ${texts.trackingScore}`;
 
         // 全ての情報を表示
         const infoLines = [];
@@ -197,7 +210,11 @@ function updateTrackingInfo() {
         for (let i = 0; i < validPoints.length; i++) {
             const point = validPoints[i];
             const pointDate = new Date(point.properties.timestamp);
-            const memo = point.properties.memo || '情報なし';
+            
+            // 言語に応じてmemoまたはmemo_enを使用
+            const memo = lang === 'en' 
+                ? (point.properties.memo_en || point.properties.memo || 'No information')
+                : (point.properties.memo || '情報なし');
             
             // pointDateから歴史的なJST補正分（18分59秒）を引いて表示
             const displayDate = new Date(pointDate.getTime() - HISTORICAL_JST_OFFSET);
@@ -213,8 +230,8 @@ function updateTrackingInfo() {
         checkAndShowScoreChange(currentTrackingCharacterId, score);
     } else {
         // まだ情報がない場合
-        scoreEl.textContent = '— 点';
-        lastInfoEl.textContent = 'まだ蠱毒が開始されていません';
+        scoreEl.textContent = `— ${texts.trackingScore}`;
+        lastInfoEl.textContent = texts.trackingNoInfo;
     }
 }
 

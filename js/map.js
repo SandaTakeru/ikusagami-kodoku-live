@@ -245,12 +245,10 @@ function changeBaseMapStyle(styleKey) {
         const currentBearing = map.getBearing();
         const currentPitch = map.getPitch();
         
-        const onStyleLoad = () => {
-            if (!map.isStyleLoaded()) {
-                setTimeout(onStyleLoad, 100);
-                return;
-            }
-            
+        let layersAdded = false;
+        
+        // styledataイベントでレイヤー追加を試行
+        map.once('styledata', () => {
             map.jumpTo({
                 center: currentCenter,
                 zoom: currentZoom,
@@ -258,13 +256,30 @@ function changeBaseMapStyle(styleKey) {
                 pitch: currentPitch
             });
             
-            // ルートとシュクバレイヤーを再追加
+            // スタイルがロードされてからルートとシュクバレイヤーを再追加
             if (typeof readdRouteLayer === 'function') {
                 readdRouteLayer();
+                layersAdded = true;
             }
-        };
+        });
         
-        map.once('idle', onStyleLoad);
+        // loadイベントでもバックアップ試行
+        map.once('load', () => {
+            if (!layersAdded && typeof readdRouteLayer === 'function') {
+                mapLogger.info('れきちず: loadイベントでレイヤー追加を試行');
+                readdRouteLayer();
+                layersAdded = true;
+            }
+        });
+        
+        // タイムアウト後にもバックアップ試行
+        setTimeout(() => {
+            if (!layersAdded && typeof readdRouteLayer === 'function') {
+                mapLogger.info('れきちず: タイムアウト後にレイヤー追加を試行');
+                readdRouteLayer();
+            }
+        }, 2000);
+        
         map.setStyle(styleConfig.style);
         return;
     }
@@ -333,19 +348,23 @@ function changeBaseMapStyle(styleKey) {
     const sourceKey = Object.keys(newStyle.sources)[0];
     const layerConfig = newStyle.layers[0];
     
-    // ルートレイヤーの前に挿入するため、最初のルートレイヤーを探す
-    const routeLayerId = map.getLayer('route-layer-other') ? 'route-layer-other' : undefined;
-    
     // 新しい背景ソースを追加
     if (!map.getSource(sourceKey)) {
         map.addSource(sourceKey, newStyle.sources[sourceKey]);
         mapLogger.info(`背景ソース追加: ${sourceKey}`);
     }
     
-    // 新しい背景レイヤーを追加（ルートレイヤーの下に配置）
+    // 新しい背景レイヤーを追加（最下層に配置）
     if (!map.getLayer(layerConfig.id)) {
-        map.addLayer(layerConfig, routeLayerId);
+        // 最初のレイヤーの前に挿入（最下層）
+        const firstLayer = map.getStyle().layers[0];
+        map.addLayer(layerConfig, firstLayer ? firstLayer.id : undefined);
         mapLogger.info(`背景レイヤー追加: ${layerConfig.id}`);
+    }
+    
+    // ルートとシュクバレイヤーを再追加して最前面に
+    if (typeof readdRouteLayer === 'function') {
+        readdRouteLayer();
     }
 }
 
@@ -430,6 +449,16 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                     }
                 }, routeLayerId);
                 mapLogger.info('令制国ラベルレイヤーを追加');
+            }
+            
+            // ルートレイヤーとシュクバレイヤーが追加されていない場合は追加
+            if (!routeLayerId && typeof readdRouteLayer === 'function') {
+                mapLogger.info('令制国ロード後にルートレイヤーを追加');
+                setTimeout(() => {
+                    if (map.isStyleLoaded()) {
+                        readdRouteLayer();
+                    }
+                }, 100);
             }
         })
         .catch(error => {

@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>イクサガミ蠱毒Live</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>イクサガミ蠱毒Live β</title>
     
     <!-- MapLibre GL JS -->
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -18,7 +18,7 @@
     
     <!-- Site Title -->
     <div class="site-header">
-        <h1 class="site-title">イクサガミ蠱毒Live(β)</h1>
+        <h1 class="site-title">イクサガミ蠱毒Live β</h1>
         <a href="#" id="info-link" class="info-icon" title="このサイトについて">ⓘ</a>
     </div>
     
@@ -97,11 +97,12 @@
         <button id="speed-down" class="control-btn" title="速度ダウン">◀◀</button>
         <button id="play-btn" class="control-btn" title="再生/一時停止">
             <span class="icon-play">▶</span>
-            <span class="icon-pause" style="display:none;">⏸</span>
+            <span class="icon-pause" style="display:none;">■</span>
         </button>
         <button id="speed-up" class="control-btn" title="速度アップ">▶▶</button>
         <input type="range" id="timeline-slider" class="timeline-slider" 
                min="0" max="100" value="0" step="any">
+        <div id="speed-display" class="speed-display">×60</div>
         <div id="current-datetime" class="current-datetime">
             <div class="datetime-date">明治11年05月05日</div>
             <div class="datetime-time">午前00時00分</div>

@@ -46,6 +46,7 @@ function initTimelineSlider() {
     
     // 初期表示
     updateDateTime(0);
+    updateSpeedDisplay();
     
     // 初期のスライダー範囲を設定
     updateTimelineRange(AppState.currentVolume);
@@ -72,7 +73,12 @@ function togglePlayButton(playing) {
  * 速度表示の更新
  */
 function updateSpeedDisplay() {
-    // 速度表示の更新処理（必要に応じて実装）
+    const speedDisplay = document.getElementById('speed-display');
+    const speed = AppState.playbackSpeed;
+    
+    if (speedDisplay) {
+        speedDisplay.textContent = `×${speed}min`;
+    }
 }
 
 /**

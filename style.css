@@ -950,9 +950,17 @@ body {
         font-size: 9px;
     }
     
+    /* 速度表示の調整 */
+    .speed-display {
+        order: 2;
+        font-size: 10px;
+        min-width: 30px;
+        padding: 0 4px;
+    }
+    
     /* 日時表示を再生ボタンの右横に配置（縦並び） */
     .current-datetime {
-        order: 2;
+        order: 3;
         flex-direction: column;
         justify-content: center;
         align-items: center;
@@ -976,7 +984,7 @@ body {
     /* タイムラインスライダーの幅とサイズを調整 */
     .timeline-slider {
         width: 100%;
-        order: 3;
+        order: 4;
         height: 5px;
         margin: 0;
     }

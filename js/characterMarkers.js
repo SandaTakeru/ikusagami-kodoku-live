@@ -41,7 +41,9 @@ const OVERLAP_CONFIG = {
     threshold: 50, // ピクセル単位での重なり判定距離
     offsetDistance: 35, // 風船の髭線の長さ
     twoMarkerAngle: 40, // 2つのマーカーのV字角度（度）
-    circleRadius: 50 // 3つ以上のマーカーの円形配置半径
+    circleRadius: 50, // 3つ以上のマーカーの円形配置半径（内側の円）
+    outerCircleRadius: 75, // 多数のマーカー時の外側の円の半径
+    singleCircleMaxCount: 18 // 単一円で配置する最大マーカー数
 };
 
 /**
@@ -751,8 +753,8 @@ function calculateMarkerLayout(group, centerCoords) {
                 center: [centerPoint.x, centerPoint.y]
             };
         });
-    } else {
-        // 3つ以上: 円形配置
+    } else if (group.length <= OVERLAP_CONFIG.singleCircleMaxCount) {
+        // 3つ以上18個まで: 単一円形配置
         const radius = OVERLAP_CONFIG.circleRadius;
         const angleStep = (2 * Math.PI) / group.length;
         const startAngle = -Math.PI / 2; // 上から始める
@@ -762,6 +764,42 @@ function calculateMarkerLayout(group, centerCoords) {
             const dx = radius * Math.cos(angle);
             const dy = radius * Math.sin(angle);
 
+            layout[id] = {
+                offset: [dx, dy],
+                center: [centerPoint.x, centerPoint.y]
+            };
+        });
+    } else {
+        // 19個以上: 二重円形配置
+        const innerRadius = OVERLAP_CONFIG.circleRadius;
+        const outerRadius = OVERLAP_CONFIG.outerCircleRadius;
+        
+        // 内側の円と外側の円にマーカーを分配
+        // 内側: 2、外側: 3の比率で配分
+        const innerCount = Math.floor(group.length * 2 / 5);
+        const outerCount = group.length - innerCount;
+        
+        const startAngle = -Math.PI / 2;
+        const innerAngleStep = (2 * Math.PI) / innerCount;
+        const outerAngleStep = (2 * Math.PI) / outerCount;
+        const outerStartOffset = outerAngleStep / 2;
+        
+        group.forEach((id, index) => {
+            let dx, dy;
+            
+            if (index < innerCount) {
+                // 内側の円
+                const angle = startAngle + innerAngleStep * index;
+                dx = innerRadius * Math.cos(angle);
+                dy = innerRadius * Math.sin(angle);
+            } else {
+                // 外側の円
+                const outerIndex = index - innerCount;
+                const angle = startAngle + outerStartOffset + outerAngleStep * outerIndex;
+                dx = outerRadius * Math.cos(angle);
+                dy = outerRadius * Math.sin(angle);
+            }
+            
             layout[id] = {
                 offset: [dx, dy],
                 center: [centerPoint.x, centerPoint.y]
@@ -923,8 +961,8 @@ function calculateGroupOffsets(count) {
             distance * Math.sin(angle / 2),
             -distance * Math.cos(angle / 2)
         ]);
-    } else {
-        // 円形配置
+    } else if (count <= OVERLAP_CONFIG.singleCircleMaxCount) {
+        // 単一円形配置（18個まで）
         const radius = OVERLAP_CONFIG.circleRadius;
         const angleStep = (2 * Math.PI) / count;
         const startAngle = -Math.PI / 2;
@@ -934,6 +972,38 @@ function calculateGroupOffsets(count) {
             offsets.push([
                 radius * Math.cos(angle),
                 radius * Math.sin(angle)
+            ]);
+        }
+    } else {
+        // 二重円形配置（19個以上）
+        const innerRadius = OVERLAP_CONFIG.circleRadius;
+        const outerRadius = OVERLAP_CONFIG.outerCircleRadius;
+        
+        // 内側の円と外側の円にマーカーを分配
+        // 内側: 2、外側: 3の比率で配分
+        const innerCount = Math.floor(count * 2 / 5);
+        const outerCount = count - innerCount;
+        
+        const startAngle = -Math.PI / 2;
+        
+        // 内側の円
+        const innerAngleStep = (2 * Math.PI) / innerCount;
+        for (let i = 0; i < innerCount; i++) {
+            const angle = startAngle + innerAngleStep * i;
+            offsets.push([
+                innerRadius * Math.cos(angle),
+                innerRadius * Math.sin(angle)
+            ]);
+        }
+        
+        // 外側の円（内側の円とずらして配置）
+        const outerAngleStep = (2 * Math.PI) / outerCount;
+        const outerStartOffset = outerAngleStep / 2; // 内側の円の隙間に配置
+        for (let i = 0; i < outerCount; i++) {
+            const angle = startAngle + outerStartOffset + outerAngleStep * i;
+            offsets.push([
+                outerRadius * Math.cos(angle),
+                outerRadius * Math.sin(angle)
             ]);
         }
     }

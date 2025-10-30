@@ -16,7 +16,7 @@ const TOTAL_MILLISECONDS = END_DATE - START_DATE;
 const VOLUME_END_DATES = {
     1: new Date(1878, 4, 9, 15, 0, 0),  // 明治11年5月9日15時
     2: new Date(1878, 4, 12, 15, 0, 0), // 明治11年5月12日15時
-    3: new Date(1878, 4, 30, 15, 0, 0), // 明治11年5月30日15時
+    3: new Date(1878, 4, 20, 18, 0, 0), // 明治11年5月20日18時
     4: new Date(1878, 5, 7, 0, 0, 0)    // 明治11年6月7日0時
 };
 

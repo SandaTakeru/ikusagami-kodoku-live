@@ -5,9 +5,9 @@
 /**
  * UI翻訳テキスト
  */
-const UI_TEXTS = {
+window.UI_TEXTS = {
     ja: {
-        siteTitle: 'イクサガミ蠱毒Live',
+        siteTitle: 'イクサガミ蠱毒Live β',
         spoilerFilterTitle: 'ネタバレフィルタ',
         spoilerOptions: [
             'イクサガミ天（1巻読了）',
@@ -29,6 +29,8 @@ const UI_TEXTS = {
         characterFilterTitle: 'キャラクターフィルタ',
         trackingClose: '閉じる',
         trackingId: '木札No.',
+        trackingScore: '点',
+        trackingNoInfo: 'まだ蠱毒が開始されていません',
         playTitle: '再生/一時停止',
         speedDownTitle: '速度ダウン',
         speedUpTitle: '速度アップ',
@@ -39,10 +41,11 @@ const UI_TEXTS = {
             copyright: '著作権は著者・出版社・制作会社・背景地図配信者に帰属します。商用利用・転載を禁じます。なお、権利者または関係各社からの修正・削除等の要請があった場合は、速やかかつ誠実に対応いたします。',
             note: '出典や使い方などの情報ページは準備中です。'
         },
-        ampm: ['午前', '午後']
+        ampm: ['午前', '午後'],
+        months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
     },
     en: {
-        siteTitle: 'Last Samurai Standing<br>Kodoku Live',
+        siteTitle: 'Last Samurai Standing<br>Kodoku Live β',
         spoilerFilterTitle: 'Spoiler Filter',
         spoilerOptions: [
             'Last Samurai Standing TEN (Vol.1)',
@@ -64,6 +67,8 @@ const UI_TEXTS = {
         characterFilterTitle: 'Character Filter',
         trackingClose: 'Close',
         trackingId: 'Tag No.',
+        trackingScore: 'pt',
+        trackingNoInfo: 'The Kodoku has not started yet',
         playTitle: 'Play/Pause',
         speedDownTitle: 'Slow Down',
         speedUpTitle: 'Speed Up',
@@ -74,7 +79,8 @@ const UI_TEXTS = {
             copyright: 'Copyright belongs to the author, publisher, production company, and base map providers. Commercial use and reproduction are prohibited. If there is a request for correction or deletion from the rights holder or related parties, we will respond promptly and sincerely.',
             note: 'Information pages about sources and usage are in preparation.'
         },
-        ampm: ['AM', 'PM']
+        ampm: ['AM', 'PM'],
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     }
 };
 
@@ -413,6 +419,14 @@ function updateUILanguage(lang) {
     const trackingClose = document.getElementById('tracking-close');
     if (trackingClose) {
         trackingClose.title = texts.trackingClose;
+    }
+    
+    // トラッキング情報を更新（現在トラッキング中の場合）
+    if (typeof updateTrackingInfo === 'function' && typeof getCurrentTrackingCharacterId === 'function') {
+        const trackingId = getCurrentTrackingCharacterId();
+        if (trackingId) {
+            updateTrackingInfo();
+        }
     }
     
     // タイムラインコントロールのタイトル
