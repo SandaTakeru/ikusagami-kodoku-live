@@ -35,6 +35,24 @@ button {
 }
 
 /* ========================================
+   SVGマーカーレイヤー
+   ======================================== */
+#marker-lines-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 200;
+    overflow: visible;
+}
+
+#interactive-markers {
+    pointer-events: all;
+}
+
+/* ========================================
    サイトヘッダー
    ======================================== */
 .site-header {
@@ -45,7 +63,7 @@ button {
     align-items: center;
     gap: 6px;
     height: 36px;
-    z-index: 1000;
+    z-index: 2000;
     transition: opacity 0.3s ease;
 }
 
@@ -86,47 +104,9 @@ button {
     transform: scale(1.15);
 }
 
-/* ========================================
-   デバッグ用キャラクターアイコン
-   ======================================== */
-.debug-icons {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 500;
-}
-
-.debug-icon {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    pointer-events: auto;
-    transition: transform 0.2s ease;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-}
-
-.debug-icon:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
-}
-
 /* 点数変化の表示 */
 .score-change {
     position: absolute;
-    top: -25px;
-    left: 50%;
     transform: translateX(-50%);
     font-size: 18px;
     font-weight: 900;
@@ -145,7 +125,7 @@ button {
         0 0 12px rgba(255, 255, 255, 0.7),
         0 2px 6px rgba(0, 0, 0, 0.6);
     animation: score-popup 1s ease-out forwards;
-    z-index: 10;
+    z-index: 1000;
 }
 
 .score-change.positive {
@@ -175,6 +155,11 @@ button {
     }
 }
 
+/* トラッキングカード用の点数変化表示 */
+.tracking-card-score-change {
+    font-size: 16px;
+}
+
 /* ========================================
    ハンバーガーメニュー
    ======================================== */
@@ -182,7 +167,7 @@ button {
     position: absolute;
     top: 20px;
     left: 20px;
-    z-index: 1000;
+    z-index: 2000;
 }
 
 .hamburger-btn {
@@ -384,7 +369,7 @@ button {
     border-radius: 6px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     padding: 8px 12px;
-    z-index: 1000;
+    z-index: 2000;
     opacity: 0.8;
     transition: opacity 0.3s ease;
 }
@@ -497,6 +482,27 @@ button {
     white-space: nowrap;
     font-size: 11px;
     color: #666;
+}
+
+/* ========================================
+   天文アイコン（絵文字）
+   ======================================== */
+.astronomy-icon {
+    flex-shrink: 0;
+    margin-left: 4px;
+    font-size: 24px;
+    line-height: 1;
+    cursor: default;
+    transition: transform 0.3s ease;
+    /* ハロ効果（光彩）で絵文字をくっきり表示 */
+    text-shadow: 
+        0 0 3px rgba(0, 0, 0, 1);
+}
+
+.astronomy-icon:hover {
+    transform: scale(1.15);
+    text-shadow: 
+        0 0 4px rgba(0, 0, 0, 1);
 }
 
 /* ========================================
@@ -688,7 +694,7 @@ button {
    ======================================== */
 .tracking-card {
     position: absolute;
-    bottom: 160px;
+    bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
@@ -929,17 +935,21 @@ button {
         font-size: 11px;
     }
     
-    /* キャラクターアイコンのサイズ調整 */
-    .debug-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-        border-width: 1.5px;
+    /* キャラクターフィルタのサイズ調整 */
+    .character-filter-item {
+        height: 36px;
+        padding: 6px 10px;
+        gap: 8px;
     }
     
-    .score-change {
-        top: -20px;
-        font-size: 14px;
+    .character-icon-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    
+    .character-name {
+        font-size: 12px;
     }
     
     /* タイムラインコンテナの調整 */
@@ -993,10 +1003,21 @@ button {
         white-space: nowrap;
     }
     
+    /* 天文アイコンのモバイル調整（日時表示の右側） */
+    .astronomy-icon {
+        order: 4;
+        font-size: 20px;
+        margin-left: 2px;
+        margin-right: 4px;
+        /* モバイルではやや控えめなハロ効果 */
+        text-shadow: 
+            0 0px 3px rgba(0, 0, 0, 1);
+    }
+    
     /* タイムラインスライダーの幅とサイズを調整 */
     .timeline-slider {
         width: 100%;
-        order: 4;
+        order: 5;
         height: 5px;
         margin: 0;
     }
@@ -1026,7 +1047,7 @@ button {
     /* トラッキングカードの調整 */
     .tracking-card {
         max-width: calc(100vw - 40px);
-        bottom: 100px;
+        bottom: 80px;
         height: 140px;
     }
     

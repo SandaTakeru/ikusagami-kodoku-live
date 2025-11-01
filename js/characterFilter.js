@@ -140,10 +140,15 @@ function selectAllCharacters(select) {
  * @param {boolean} enabled - 有効/無効
  */
 function handleCharacterToggle(id, enabled) {
+    const character = CHARACTERS[id];
+    const charName = character ? (character.name || id) : id;
+    
     if (enabled) {
         AppState.enabledCharacters.add(id);
+        console.log(`[CharacterFilter] Enabled character ${id} (${charName}). Total enabled: ${AppState.enabledCharacters.size}`);
     } else {
         AppState.enabledCharacters.delete(id);
+        console.log(`[CharacterFilter] Disabled character ${id} (${charName}). Total enabled: ${AppState.enabledCharacters.size}`);
     }
     
     // マーカーの表示/非表示を更新
@@ -164,52 +169,55 @@ function handleCharacterToggle(id, enabled) {
  * キャラクターマーカーの表示/非表示を更新
  */
 function updateCharacterMarkerVisibility() {
-    if (typeof characterMarkers === 'undefined') return;
+    console.log('[CharacterFilter] updateCharacterMarkerVisibility called');
     
     let visibleCount = 0;
     let hiddenCount = 0;
     let trackingCharacterHidden = false;
     
-    // まずHTMLマーカーの表示状態を更新
-    Object.keys(characterMarkers).forEach(characterId => {
-        const id = parseInt(characterId);
-        const marker = characterMarkers[id];
-        const character = CHARACTERS[id];
-        
-        if (!marker || !character) return;
-        
-        // ネタバレフィルタチェック: 現在の巻数以下のキャラクターのみ表示対象
-        const isWithinVolume = character.volume <= AppState.currentVolume;
-        
-        // キャラクターフィルタチェック: ONになっているキャラクターのみ表示
-        const isEnabled = AppState.enabledCharacters.has(id);
-        
-        // 両方の条件を満たす場合のみ表示
-        const shouldShow = isWithinVolume && isEnabled;
-        
-        // トラッキング中のキャラクターが非表示になるかチェック
-        if (!shouldShow && typeof getCurrentTrackingCharacterId === 'function') {
-            const trackingId = getCurrentTrackingCharacterId();
-            if (trackingId !== null && parseInt(trackingId) === id) {
-                trackingCharacterHidden = true;
-            }
-        }
-        
-        // マーカー要素の表示/非表示を切り替え
-        const markerElement = marker.getElement();
-        if (markerElement) {
-            const previousDisplay = markerElement.style.display;
-            markerElement.style.display = shouldShow ? 'flex' : 'none';
+    // HTMLマーカーの表示状態を更新（存在する場合のみ）
+    if (typeof characterMarkers !== 'undefined') {
+        Object.keys(characterMarkers).forEach(characterId => {
+            const id = parseInt(characterId);
+            const marker = characterMarkers[id];
+            const character = CHARACTERS[id];
             
-            if (shouldShow) {
-                visibleCount++;
-            } else {
-                hiddenCount++;
+            if (!marker || !character) return;
+            
+            // ネタバレフィルタチェック: 現在の巻数以下のキャラクターのみ表示対象
+            const isWithinVolume = character.volume <= AppState.currentVolume;
+            
+            // キャラクターフィルタチェック: ONになっているキャラクターのみ表示
+            const isEnabled = AppState.enabledCharacters.has(id);
+            
+            // 両方の条件を満たす場合のみ表示
+            const shouldShow = isWithinVolume && isEnabled;
+            
+            // トラッキング中のキャラクターが非表示になるかチェック
+            if (!shouldShow && typeof getCurrentTrackingCharacterId === 'function') {
+                const trackingId = getCurrentTrackingCharacterId();
+                if (trackingId !== null && parseInt(trackingId) === id) {
+                    trackingCharacterHidden = true;
+                }
             }
-        }
-    });
-    
-    console.log(`[CharacterFilter] Marker visibility updated: ${visibleCount} visible, ${hiddenCount} hidden`);
+            
+            // マーカー要素の表示/非表示を切り替え
+            const markerElement = marker.getElement();
+            if (markerElement) {
+                markerElement.style.display = shouldShow ? 'flex' : 'none';
+                
+                if (shouldShow) {
+                    visibleCount++;
+                } else {
+                    hiddenCount++;
+                }
+            }
+        });
+        
+        console.log(`[CharacterFilter] HTML Marker visibility updated: ${visibleCount} visible, ${hiddenCount} hidden`);
+    } else {
+        console.log('[CharacterFilter] No HTML markers (using SVG markers)');
+    }
     
     // トラッキング中のキャラクターが非表示になった場合、トラッキングを解除
     if (trackingCharacterHidden) {
@@ -220,31 +228,10 @@ function updateCharacterMarkerVisibility() {
         }
     }
     
-    // SVGマーカーの表示状態も更新
-    if (typeof svgMarkerCache !== 'undefined') {
-        Object.keys(svgMarkerCache).forEach(characterId => {
-            const id = parseInt(characterId);
-            const character = CHARACTERS[id];
-            
-            if (!character) return;
-            
-            const isWithinVolume = character.volume <= AppState.currentVolume;
-            const isEnabled = AppState.enabledCharacters.has(id);
-            const shouldShow = isWithinVolume && isEnabled;
-            
-            const cached = svgMarkerCache[characterId];
-            if (cached && cached.group) {
-                cached.group.style.display = shouldShow ? '' : 'none';
-            }
-        });
-    }
-    
-    // 重なり解消レイアウトを更新（表示されているマーカーのみ）
+    // SVGマーカーの表示状態を更新（updateOverlapLayoutに任せる）
+    // updateOverlapLayoutがフィルタ状態を反映して全てのSVGマーカーを正しく制御する
     if (typeof updateOverlapLayout === 'function') {
-        // 短い遅延を入れて、DOM更新が完了してから実行
-        setTimeout(() => {
-            updateOverlapLayout();
-        }, 10);
+        updateOverlapLayout();
     }
 }
 

@@ -25,12 +25,7 @@ const characterCurrentPositions = {};
 const characterTimelines = {};
 
 /**
- * MapLibre Markerオブジェクトの管理
- */
-const characterMarkers = {};
-
-/**
- * SVGレイヤー（髭線描画用）
+ * SVGレイヤー（マーカーと髭線描画用）
  */
 let markerLinesSvg = null;
 
@@ -41,8 +36,8 @@ const OVERLAP_CONFIG = {
     threshold: 50, // ピクセル単位での重なり判定距離
     offsetDistance: 35, // 風船の髭線の長さ
     twoMarkerAngle: 40, // 2つのマーカーのV字角度（度）
-    circleRadius: 50, // 3つ以上のマーカーの円形配置半径（内側の円）
-    outerCircleRadius: 75, // 多数のマーカー時の外側の円の半径
+    circleRadius: 55, // 3つ以上のマーカーの円形配置半径（内側の円）
+    outerCircleRadius: 90, // 多数のマーカー時の外側の円の半径
     singleCircleMaxCount: 18 // 単一円で配置する最大マーカー数
 };
 
@@ -195,7 +190,7 @@ function buildCharacterTimelines() {
 }
 
 /**
- * キャラクターマーカーをマップに追加（HTMLマーカー方式）
+ * キャラクターマーカーをマップに追加（SVGマーカー方式）
  */
 function addCharacterMarkers() {
     if (!allPointsData) {
@@ -206,55 +201,18 @@ function addCharacterMarkers() {
     // 補間位置データを作成
     const positions = getInterpolatedCharacterPositions(currentDisplayTime);
 
-    // 現在の言語設定を取得
-    const currentLang = document.documentElement.lang || 'ja';
-
-    // 各キャラクターのマーカーを作成
+    // characterCurrentPositionsを設定
     Object.entries(positions).forEach(([characterId, positionData]) => {
-        const character = CHARACTERS[characterId];
-        if (!character) return;
-
-        const iconText = currentLang === 'ja' ? character.icon : character.iconEn;
-        const coords = positionData.coordinates;
-
-        // HTMLマーカー要素を作成
-        const el = createMarkerElement(character, iconText, characterId);
-
-        // MapLibre Markerを作成
-        const marker = new maplibregl.Marker({
-            element: el,
-            anchor: 'center'
-        })
-            .setLngLat(coords)
-            .addTo(map);
-
-        // マーカーを保存
-        characterMarkers[characterId] = marker;
-        
-        // 初期表示状態を設定（ネタバレフィルタとキャラクターフィルタに基づく）
-        const id = parseInt(characterId);
-        const isWithinVolume = character.volume <= AppState.currentVolume;
-        const isEnabled = AppState.enabledCharacters.has(id);
-        const shouldShow = isWithinVolume && isEnabled;
-        
-        if (!shouldShow) {
-            el.style.display = 'none';
-        }
+        characterCurrentPositions[characterId] = {
+            geometry: { coordinates: positionData.coordinates },
+            properties: positionData.properties
+        };
     });
 
     markerLogger.info('Character markers added to map');
 
     // 重なり解消レイアウトを適用（即座に実行）
-    // characterCurrentPositionsが設定された後に実行されるようにする
     setTimeout(() => {
-        // characterCurrentPositionsを設定
-        Object.entries(positions).forEach(([characterId, positionData]) => {
-            characterCurrentPositions[characterId] = {
-                geometry: { coordinates: positionData.coordinates },
-                properties: positionData.properties
-            };
-        });
-        // レイアウト更新
         updateOverlapLayout();
     }, 50);
 }
@@ -271,113 +229,6 @@ function isCharacterDeceased(characterId, currentTime) {
     
     const currentTimestamp = currentTime.getTime();
     return currentTimestamp > lastTimestamp;
-}
-
-/**
- * マーカー要素に死亡状態のスタイルを適用
- * @param {HTMLElement} el - マーカー要素
- * @param {Object} character - キャラクター情報
- * @param {boolean} isDeceased - 死亡状態かどうか
- */
-function applyDeceasedStyle(el, character, isDeceased) {
-    if (isDeceased) {
-        // グレーで目立たないスタイル（透明化なし）
-        el.style.background = '#888888';
-        el.style.filter = 'grayscale(100%)';
-        el.style.border = '2px solid rgba(200, 200, 200, 0.5)';
-    } else {
-        // 通常のスタイル
-        el.style.background = character.color;
-        el.style.filter = 'none';
-        el.style.border = '2px solid rgba(255, 255, 255, 0.8)';
-    }
-}
-
-/**
- * マーカー用のHTML要素を作成
- * @param {Object} character - キャラクター情報
- * @param {string} iconText - 表示テキスト
- * @param {string} characterId - キャラクターID
- * @returns {HTMLElement} マーカー要素
- */
-function createMarkerElement(character, iconText, characterId) {
-    const el = document.createElement('div');
-    el.className = 'map-character-marker';
-    el.setAttribute('data-character-id', characterId);
-    
-    // 死亡状態を判定
-    const isDeceased = isCharacterDeceased(characterId, currentDisplayTime);
-    
-    el.style.cssText = `
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: ${isDeceased ? '#888888' : character.color};
-        border: 2px solid ${isDeceased ? 'rgba(200, 200, 200, 0.5)' : 'rgba(255, 255, 255, 0.8)'};
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        cursor: pointer;
-        transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease, box-shadow 0.15s ease, background 0.3s ease, filter 0.3s ease;
-        line-height: 40px;
-        text-align: center;
-        padding: 0;
-        margin: 0;
-        z-index: 100;
-        pointer-events: all;
-        filter: ${isDeceased ? 'grayscale(100%)' : 'none'};
-    `;
-
-    el.textContent = iconText;
-
-    // ホバー効果（マーカーを最前面に）
-    el.addEventListener('mouseenter', () => {
-        el.style.width = '46px';
-        el.style.height = '46px';
-        el.style.fontSize = '23px';
-        el.style.boxShadow = '0 3px 12px rgba(0, 0, 0, 0.4)';
-        
-        // MapLibreのマーカーコンテナ（親要素）のz-indexを変更
-        let parent = el.parentElement;
-        while (parent && !parent.classList.contains('maplibregl-marker')) {
-            parent = parent.parentElement;
-        }
-        if (parent) {
-            parent.style.zIndex = '1000';
-            markerLogger.debug(`HTML Marker hover: ${characterId}, z-index set to 1000`);
-        }
-    });
-    
-    el.addEventListener('mouseleave', () => {
-        el.style.width = '40px';
-        el.style.height = '40px';
-        el.style.fontSize = '20px';
-        el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
-        
-        // z-indexを元に戻す
-        let parent = el.parentElement;
-        while (parent && !parent.classList.contains('maplibregl-marker')) {
-            parent = parent.parentElement;
-        }
-        if (parent) {
-            parent.style.zIndex = '';
-        }
-    });
-
-    // クリックイベント：トラッキングカードを表示
-    el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        markerLogger.debug(`HTML Marker clicked: ${characterId}`);
-        if (typeof showTrackingCard === 'function') {
-            showTrackingCard(characterId);
-        }
-    });
-
-    return el;
 }
 
 /**
@@ -493,79 +344,28 @@ function updateCharacterPositions(currentTime) {
     // 補間位置データを取得
     const positions = getInterpolatedCharacterPositions(currentTime);
 
-    // 各マーカーの位置を滑らかに更新
+    // 現在位置を保存（トラッキング用）
     Object.entries(positions).forEach(([characterId, positionData]) => {
-        const marker = characterMarkers[characterId];
-        const coords = positionData.coordinates;
-        const id = parseInt(characterId);
-        const character = CHARACTERS[id];
-
-        if (marker) {
-            // 既存マーカーの位置を更新
-            marker.setLngLat(coords);
-            
-            // フィルタに基づいて表示/非表示を設定
-            if (character) {
-                const isWithinVolume = character.volume <= AppState.currentVolume;
-                const isEnabled = AppState.enabledCharacters.has(id);
-                const shouldShow = isWithinVolume && isEnabled;
-                
-                const el = marker.getElement();
-                if (el) {
-                    el.style.display = shouldShow ? '' : 'none';
-                    
-                    // 死亡状態を反映
-                    const isDeceased = isCharacterDeceased(characterId, currentTime);
-                    applyDeceasedStyle(el, character, isDeceased);
-                }
-            }
-        } else {
-            // マーカーがまだ存在しない場合は新規作成
-            if (!character) return;
-
-            const currentLang = document.documentElement.lang || 'ja';
-            const iconText = currentLang === 'ja' ? character.icon : character.iconEn;
-            const el = createMarkerElement(character, iconText, characterId);
-
-            const newMarker = new maplibregl.Marker({
-                element: el,
-                anchor: 'center'
-            })
-                .setLngLat(coords)
-                .addTo(map);
-
-            characterMarkers[characterId] = newMarker;
-            
-            // 初期表示状態を設定
-            const isWithinVolume = character.volume <= AppState.currentVolume;
-            const isEnabled = AppState.enabledCharacters.has(id);
-            const shouldShow = isWithinVolume && isEnabled;
-            
-            if (!shouldShow) {
-                el.style.display = 'none';
-            }
-        }
-        
-        // 現在位置を保存（トラッキング用）
         characterCurrentPositions[characterId] = {
-            geometry: { coordinates: coords },
+            geometry: { coordinates: positionData.coordinates },
             properties: positionData.properties
         };
     });
 
-    // 現在時刻より未来のキャラクターマーカーを非表示
-    Object.keys(characterMarkers).forEach(characterId => {
+    // 現在時刻より未来のキャラクターを削除
+    Object.keys(characterCurrentPositions).forEach(characterId => {
         if (!positions[characterId]) {
-            const marker = characterMarkers[characterId];
-            if (marker) {
-                marker.remove();
-                delete characterMarkers[characterId];
-            }
+            delete characterCurrentPositions[characterId];
         }
     });
 
     // 重なり解消レイアウトを更新
     updateOverlapLayout();
+    
+    // 点数変化ポップアップの位置を更新（存在する場合）
+    if (typeof window.updateAllScorePopupPositions === 'function') {
+        window.updateAllScorePopupPositions();
+    }
 }
 
 /**
@@ -620,12 +420,18 @@ function initMarkerLinesSvg() {
         width: 100%;
         height: 100%;
         pointer-events: none;
-        z-index: 0;
+        z-index: 200;
         overflow: visible;
     `;
     mapContainer.appendChild(markerLinesSvg);
     
-    // クリック可能なマーカー用のグループを作成
+    // 髭線用のグループを作成（背景レイヤー）
+    const linesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    linesGroup.id = 'marker-lines';
+    linesGroup.style.pointerEvents = 'none';
+    markerLinesSvg.appendChild(linesGroup);
+    
+    // クリック可能なマーカー用のグループを作成（前面レイヤー）
     const interactiveGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     interactiveGroup.id = 'interactive-markers';
     interactiveGroup.style.pointerEvents = 'all';
@@ -795,10 +601,8 @@ function updateOverlapLayout() {
 
     // 現在のマーカー位置を取得（フィルタで表示されているもののみ）
     const positions = {};
+    let filteredOutCount = 0;
     Object.entries(characterCurrentPositions).forEach(([characterId, positionData]) => {
-        const marker = characterMarkers[characterId];
-        if (!marker) return;
-        
         // フィルタ状態を確認
         const numId = parseInt(characterId);
         const character = CHARACTERS[numId];
@@ -811,8 +615,12 @@ function updateOverlapLayout() {
         // フィルタで表示状態のマーカーのみを処理対象とする
         if (shouldShow) {
             positions[characterId] = positionData.geometry.coordinates;
+        } else {
+            filteredOutCount++;
         }
     });
+    
+    markerLogger.debug(`updateOverlapLayout: ${Object.keys(positions).length} markers to show, ${filteredOutCount} filtered out`);
 
     if (Object.keys(positions).length === 0) {
         // 表示するマーカーがない場合、全てのSVGマーカーと髭線をクリア
@@ -832,89 +640,66 @@ function updateOverlapLayout() {
     const groups = groupOverlappingMarkers(positions);
     markerLogger.debug(`Overlap layout: ${Object.keys(positions).length} visible markers, ${groups.length} groups`);
 
-    // SVGのインタラクティブグループを取得または作成
-    let interactiveGroup = document.getElementById('interactive-markers');
-    if (!interactiveGroup) {
-        interactiveGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        interactiveGroup.id = 'interactive-markers';
-        interactiveGroup.style.pointerEvents = 'all';
-        markerLinesSvg.appendChild(interactiveGroup);
+    // 髭線グループをクリア
+    const linesGroup = document.getElementById('marker-lines');
+    if (linesGroup) {
+        while (linesGroup.firstChild) {
+            linesGroup.removeChild(linesGroup.firstChild);
+        }
     }
-
-    // 髭線グループをクリア（背景レイヤー）
-    let linesGroup = document.getElementById('marker-lines');
-    if (!linesGroup) {
-        linesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        linesGroup.id = 'marker-lines';
-        linesGroup.style.pointerEvents = 'none';
-        markerLinesSvg.insertBefore(linesGroup, interactiveGroup);
-    }
-    while (linesGroup.firstChild) {
-        linesGroup.removeChild(linesGroup.firstChild);
-    }
-    
-    // 現在使用中のキャラクターIDを記録
-    const activeCharacterIds = new Set();
 
     // マーカーを配置
     groups.forEach(group => {
         if (group.length === 1) {
-            // 単独マーカーは通常表示（HTMLマーカー）
+            // 単独マーカー: オフセットなしで表示
             const id = group[0];
-            activeCharacterIds.add(id);
+            const coords = positions[id];
+            const point = map.project(coords);
             
-            const marker = characterMarkers[id];
-            if (marker) {
-                const el = marker.getElement();
-                if (el) {
-                    // positionsに含まれているということは、フィルタで表示状態
-                    // HTMLマーカーを表示
-                    el.style.display = '';
-                }
-            }
-            
-            // SVGマーカーがあれば非表示
-            hideSvgMarker(id);
+            updateOrCreateSvgMarker(id, [point.x, point.y]);
         } else {
-            // 複数マーカー: SVG上に描画
+            // 複数マーカー: 枝分かれ配置
             const centerCoords = getGroupCenter(group, positions);
             const centerPoint = map.project(centerCoords);
             
             // レイアウト計算
             const offsets = calculateGroupOffsets(group.length);
             
+            // 二重円の場合、内側の円のマーカー数を計算
+            const innerCount = group.length > OVERLAP_CONFIG.singleCircleMaxCount 
+                ? Math.floor(group.length * 2 / 5) 
+                : group.length;
+            
             // 髭線とマーカーを描画
-            // groupに含まれているということは、全てフィルタで表示状態
             group.forEach((id, index) => {
-                activeCharacterIds.add(id);
-                
-                const marker = characterMarkers[id];
-                if (!marker) return;
-                
-                // 髭線を描画
                 const offset = offsets[index];
                 const iconPos = [centerPoint.x + offset[0], centerPoint.y + offset[1]];
-                drawMarkerLine([centerPoint.x, centerPoint.y], iconPos, linesGroup);
                 
-                // 元のHTMLマーカーを非表示
-                const el = marker.getElement();
-                if (el) {
-                    el.style.display = 'none';
+                // 二重円の場合、内側の円のマーカーのみ髭線を描画
+                if (index < innerCount) {
+                    drawMarkerLine([centerPoint.x, centerPoint.y], iconPos, linesGroup);
                 }
-
+                
                 // SVGマーカーの位置を更新または作成
                 updateOrCreateSvgMarker(id, iconPos);
             });
         }
     });
     
-    // 使用されていないSVGマーカーを非表示
-    // activeでない、または単独グループの場合は非表示
+    // 表示すべきマーカーのIDセットを作成
+    const activeCharacterIds = new Set();
+    groups.forEach(group => group.forEach(id => activeCharacterIds.add(id)));
+    
+    // 全てのキャッシュ済みマーカーをチェックし、表示すべきでないものを非表示に
+    let hiddenCount = 0;
     Object.keys(svgMarkerCache).forEach(id => {
-        if (!activeCharacterIds.has(id) || groups.find(g => g.length === 1 && g[0] === id)) {
+        if (!activeCharacterIds.has(id)) {
             hideSvgMarker(id);
+            hiddenCount++;
         }
     });
+    
+    markerLogger.debug(`updateOverlapLayout complete: ${activeCharacterIds.size} shown, ${hiddenCount} hidden`);
 }
 
 /**
@@ -990,14 +775,14 @@ function calculateGroupOffsets(count) {
 
 /**
  * SVGマーカーの位置を更新または新規作成
- * この関数が呼ばれる時点で、characterIdは表示状態であることが保証されている
  * @param {string} characterId - キャラクターID
  * @param {Array} position - [x, y] ピクセル座標
  */
 function updateOrCreateSvgMarker(characterId, position) {
     const character = CHARACTERS[characterId];
+    if (!character) return;
     
-    // キャッシュに存在する場合は位置と死亡状態を更新
+    // キャッシュに存在する場合は位置と状態を更新
     if (svgMarkerCache[characterId]) {
         const cached = svgMarkerCache[characterId];
         
@@ -1013,23 +798,23 @@ function updateOrCreateSvgMarker(characterId, position) {
         // 死亡状態を反映
         const isDeceased = isCharacterDeceased(characterId, currentDisplayTime);
         if (isDeceased) {
-            cached.group.setAttribute('filter', 'grayscale(100%)');
             cached.circle.setAttribute('fill', '#888888');
-            cached.circle.setAttribute('stroke', 'rgba(200, 200, 200, 0.5)');
-        } else if (character) {
-            cached.group.removeAttribute('filter');
+            cached.circle.setAttribute('stroke', 'rgba(100, 100, 100, 0.5)');
+            cached.circle.setAttribute('opacity', '1');
+        } else {
             cached.circle.setAttribute('fill', character.color);
-            cached.circle.setAttribute('stroke', 'rgba(255, 255, 255, 0.8)');
+            cached.circle.setAttribute('stroke', 'rgba(255, 255, 255, 0.5)');
+            cached.circle.setAttribute('opacity', '1');
         }
         
-        // 表示
+        // 表示（呼び出し元で表示すべきマーカーのみが呼ばれる）
         cached.group.style.display = '';
         
         return;
     }
     
-    // 新規作成（表示状態で）
-    createSvgMarker(characterId, position, true);
+    // 新規作成
+    createSvgMarker(characterId, position);
 }
 
 /**
@@ -1038,7 +823,11 @@ function updateOrCreateSvgMarker(characterId, position) {
  */
 function hideSvgMarker(characterId) {
     if (svgMarkerCache[characterId]) {
+        const wasVisible = svgMarkerCache[characterId].group.style.display !== 'none';
         svgMarkerCache[characterId].group.style.display = 'none';
+        if (wasVisible) {
+            markerLogger.debug(`Hiding SVG marker: ${characterId}`);
+        }
     }
 }
 
@@ -1046,9 +835,8 @@ function hideSvgMarker(characterId) {
  * SVG上にマーカーを新規作成
  * @param {string} characterId - キャラクターID
  * @param {Array} position - [x, y] ピクセル座標
- * @param {boolean} shouldShow - 初期表示状態（デフォルトtrue）
  */
-function createSvgMarker(characterId, position, shouldShow = true) {
+function createSvgMarker(characterId, position) {
     const character = CHARACTERS[characterId];
     if (!character) return;
 
@@ -1065,14 +853,7 @@ function createSvgMarker(characterId, position, shouldShow = true) {
     // グループ要素を作成（ホバー・クリック用）
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     group.setAttribute('data-character-id', characterId);
-    group.style.cursor = 'pointer';
-    group.style.pointerEvents = 'all';
-    group.style.display = shouldShow ? '' : 'none';
-    
-    // 死亡状態の場合はグレースケールフィルタを適用
-    if (isDeceased) {
-        group.setAttribute('filter', 'grayscale(100%)');
-    }
+    group.style.cssText = 'cursor: pointer; pointer-events: all;';
     
     // 透明な大きめの円を追加（クリック領域を広げる）
     const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -1080,7 +861,6 @@ function createSvgMarker(characterId, position, shouldShow = true) {
     hitArea.setAttribute('cy', position[1]);
     hitArea.setAttribute('r', '25');
     hitArea.setAttribute('fill', 'transparent');
-    hitArea.setAttribute('stroke', 'none');
     hitArea.style.pointerEvents = 'all';
     group.appendChild(hitArea);
 
@@ -1092,9 +872,9 @@ function createSvgMarker(characterId, position, shouldShow = true) {
     circle.setAttribute('fill', isDeceased ? '#888888' : character.color);
     circle.setAttribute('stroke', isDeceased ? 'rgba(200, 200, 200, 0.5)' : 'rgba(255, 255, 255, 0.8)');
     circle.setAttribute('stroke-width', '2');
+    circle.setAttribute('opacity', isDeceased ? '0.6' : '1');
     circle.setAttribute('filter', 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))');
-    circle.style.pointerEvents = 'all';
-    
+    circle.style.cssText = 'pointer-events: all; transition: r 0.15s ease, filter 0.15s ease;';
     group.appendChild(circle);
 
     // テキストを描画
@@ -1106,9 +886,8 @@ function createSvgMarker(characterId, position, shouldShow = true) {
     text.setAttribute('fill', 'white');
     text.setAttribute('font-size', '20');
     text.setAttribute('font-weight', 'bold');
-    text.setAttribute('style', 'user-select: none; pointer-events: none;');
+    text.style.cssText = 'user-select: none; pointer-events: none; transition: font-size 0.15s ease;';
     text.textContent = iconText;
-    
     group.appendChild(text);
 
     // ホバー効果
@@ -1121,9 +900,9 @@ function createSvgMarker(characterId, position, shouldShow = true) {
         // SVGでは要素を親の最後に移動して最前面に表示
         if (group.parentNode) {
             group.parentNode.appendChild(group);
-            markerLogger.debug(`SVG Marker hover: ${characterId}, moved to front`);
         }
     });
+    
     group.addEventListener('mouseleave', () => {
         hitArea.setAttribute('r', '25');
         circle.setAttribute('r', '20');
@@ -1131,10 +910,10 @@ function createSvgMarker(characterId, position, shouldShow = true) {
         circle.setAttribute('filter', 'drop-shadow(0 2px 8px rgba(0,0,0,0.3))');
     });
     
-    // クリックイベント：シンプルに1つだけ実装
+    // クリックイベント
     group.addEventListener('click', (e) => {
         e.stopPropagation();
-        markerLogger.debug(`SVG Marker clicked: ${characterId}`);
+        markerLogger.debug(`Marker clicked: ${characterId}`);
         if (typeof showTrackingCard === 'function') {
             showTrackingCard(characterId);
         }
@@ -1142,7 +921,7 @@ function createSvgMarker(characterId, position, shouldShow = true) {
     
     interactiveGroup.appendChild(group);
     
-    // キャッシュに保存
+    // キャッシュに保存（表示状態は呼び出し元で制御される）
     svgMarkerCache[characterId] = {
         group: group,
         hitArea: hitArea,
@@ -1150,57 +929,6 @@ function createSvgMarker(characterId, position, shouldShow = true) {
         text: text,
         position: position
     };
-}
-
-/**
- * 重なっているマーカーをグループ化
- * @param {Object} positions - { characterId: [lng, lat] }
- * @returns {Array} グループの配列
- */
-function groupOverlappingMarkers(positions) {
-    const characterIds = Object.keys(positions);
-    const visited = new Set();
-    const groups = [];
-
-    characterIds.forEach(id1 => {
-        if (visited.has(id1)) return;
-
-        const group = [id1];
-        visited.add(id1);
-        const coords1 = positions[id1];
-
-        characterIds.forEach(id2 => {
-            if (id1 !== id2 && !visited.has(id2)) {
-                const coords2 = positions[id2];
-                const distance = getPixelDistance(coords1, coords2);
-
-                if (distance < OVERLAP_CONFIG.threshold) {
-                    group.push(id2);
-                    visited.add(id2);
-                }
-            }
-        });
-
-        groups.push(group);
-    });
-
-    return groups;
-}
-
-/**
- * グループの中心座標を計算
- * @param {Array} characterIds - キャラクターIDの配列
- * @param {Object} positions - { characterId: [lng, lat] }
- * @returns {Array} [lng, lat]
- */
-function getGroupCenter(characterIds, positions) {
-    let sumLng = 0, sumLat = 0;
-    characterIds.forEach(id => {
-        const [lng, lat] = positions[id];
-        sumLng += lng;
-        sumLat += lat;
-    });
-    return [sumLng / characterIds.length, sumLat / characterIds.length];
 }
 
 /**
@@ -1241,18 +969,6 @@ function drawCenterDot(point) {
  * @param {string} lang - 言語 ('ja' or 'en')
  */
 function updateMarkerLanguage(lang) {
-    // HTMLマーカーのテキストを更新
-    Object.entries(characterMarkers).forEach(([characterId, marker]) => {
-        const character = CHARACTERS[characterId];
-        if (!character) return;
-        
-        const el = marker.getElement();
-        if (el) {
-            const iconText = lang === 'ja' ? character.icon : character.iconEn;
-            el.textContent = iconText;
-        }
-    });
-    
     // SVGマーカーのテキストを更新
     Object.entries(svgMarkerCache).forEach(([characterId, cached]) => {
         const character = CHARACTERS[characterId];

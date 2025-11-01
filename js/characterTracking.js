@@ -25,6 +25,12 @@ const lastDisplayedScores = {};
 let lastSliderPosition = 0;
 
 /**
+ * アクティブな点数変化ポップアップの情報
+ * { characterId: { element, startTime } }
+ */
+const activeScorePopups = {};
+
+/**
  * 日時をフォーマットする
  * @param {Date} date - フォーマットする日時
  * @returns {string} フォーマットされた日時文字列
@@ -58,6 +64,12 @@ function initializeTracking() {
 
     // 初期状態では非表示
     hideTrackingCard();
+    
+    // 地図の移動・ズーム時にポップアップ位置を更新
+    if (map) {
+        map.on('move', updateAllScorePopupPositions);
+        map.on('zoom', updateAllScorePopupPositions);
+    }
 }
 
 /**
@@ -96,6 +108,13 @@ function showTrackingCard(characterId) {
 function hideTrackingCard() {
     const card = document.getElementById('tracking-card');
     card.style.display = 'none';
+    
+    // トラッキングカード用の点数変化表示を削除
+    const cardScoreChange = card.querySelector('.tracking-card-score-change');
+    if (cardScoreChange) {
+        cardScoreChange.remove();
+    }
+    
     currentTrackingCharacterId = null;
     isTrackingMode = false;
 }
@@ -135,8 +154,11 @@ function centerMapOnCharacter(characterId, instant = true) {
  * （時系列スライダーが動いた時などに呼ばれる想定）
  */
 function updateTrackingInfo() {
-    // すべてのデバッグアイコンのキャラクターの点数変化をチェック
+    // すべてのキャラクターの点数変化をチェック
     updateAllCharacterScores();
+    
+    // アクティブなポップアップの位置を更新
+    updateAllScorePopupPositions();
     
     const pointsData = getAllPointsData();
     if (!currentTrackingCharacterId || !pointsData) {
@@ -252,9 +274,9 @@ function updateAllCharacterScores() {
     
     if (isRewinding) {
         // 巻き戻し時は点数を更新するが、表示はしない
-        const debugIcons = document.querySelectorAll('.debug-icon');
-        debugIcons.forEach(icon => {
-            const characterId = icon.getAttribute('data-character-id');
+        const svgMarkers = document.querySelectorAll('#interactive-markers g[data-character-id]');
+        svgMarkers.forEach(marker => {
+            const characterId = marker.getAttribute('data-character-id');
             if (!characterId) return;
             
             const currentMilliseconds = (percentage / 100) * TOTAL_MILLISECONDS;
@@ -291,10 +313,10 @@ function updateAllCharacterScores() {
         return;
     }
     
-    // すべてのデバッグアイコンのキャラクターをチェック
-    const debugIcons = document.querySelectorAll('.debug-icon');
-    debugIcons.forEach(icon => {
-        const characterId = icon.getAttribute('data-character-id');
+    // すべてのSVGマーカーのキャラクターをチェック
+    const svgMarkers = document.querySelectorAll('#interactive-markers g[data-character-id]');
+    svgMarkers.forEach(marker => {
+        const characterId = marker.getAttribute('data-character-id');
         if (!characterId) return;
         
         // 現在の時刻を取得
@@ -362,28 +384,129 @@ function checkAndShowScoreChange(characterId, newScore) {
 function showScoreChangeOnIcon(characterId, change) {
     if (change === 0) return;
     
-    // デバッグアイコンを取得
-    const icon = document.querySelector(`.debug-icon[data-character-id="${characterId}"]`);
-    if (!icon) return;
-    
-    // 既存の点数変化表示を削除
-    const existingChange = icon.querySelector('.score-change');
-    if (existingChange) {
-        existingChange.remove();
+    // 既存の点数変化表示を削除（同じキャラクターID用）
+    if (activeScorePopups[characterId]) {
+        const existing = activeScorePopups[characterId];
+        if (existing.element && existing.element.parentNode) {
+            existing.element.remove();
+        }
+        if (existing.cardElement && existing.cardElement.parentNode) {
+            existing.cardElement.remove();
+        }
+        delete activeScorePopups[characterId];
     }
     
-    // 新しい点数変化要素を作成
+    // 新しい点数変化要素を作成（HTML要素として）
     const changeEl = document.createElement('div');
     changeEl.className = `score-change ${change > 0 ? 'positive' : 'negative'}`;
+    changeEl.setAttribute('data-character-id', characterId);
     changeEl.textContent = change > 0 ? `+${change}` : `${change}`;
+    changeEl.style.position = 'absolute';
+    changeEl.style.pointerEvents = 'none';
+    changeEl.style.zIndex = '800';
     
-    // アイコンに追加
-    icon.appendChild(changeEl);
+    // 地図コンテナに追加
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        mapContainer.appendChild(changeEl);
+    }
+    
+    // トラッキングカード用の点数変化要素を作成（トラッキング中の場合）
+    let cardChangeEl = null;
+    if (isTrackingMode && currentTrackingCharacterId === characterId) {
+        cardChangeEl = createTrackingCardScoreChange(change);
+    }
+    
+    // アクティブなポップアップとして記録
+    activeScorePopups[characterId] = {
+        element: changeEl,
+        cardElement: cardChangeEl,
+        startTime: Date.now()
+    };
+    
+    // 初期位置を設定
+    updateScorePopupPosition(characterId);
     
     // 1秒後に削除
     setTimeout(() => {
-        changeEl.remove();
+        if (activeScorePopups[characterId] && activeScorePopups[characterId].element === changeEl) {
+            changeEl.remove();
+            if (cardChangeEl && cardChangeEl.parentNode) {
+                cardChangeEl.remove();
+            }
+            delete activeScorePopups[characterId];
+        }
     }, 1000);
+}
+
+/**
+ * トラッキングカードに点数変化を表示
+ * @param {number} change - 点数の変化量
+ * @returns {HTMLElement} 作成した要素
+ */
+function createTrackingCardScoreChange(change) {
+    const trackingScore = document.getElementById('tracking-score');
+    if (!trackingScore) return null;
+    
+    // 既存のトラッキングカード用点数変化を削除
+    const existingCardChange = trackingScore.parentElement.querySelector('.tracking-card-score-change');
+    if (existingCardChange) {
+        existingCardChange.remove();
+    }
+    
+    // 新しい点数変化要素を作成
+    const cardChangeEl = document.createElement('div');
+    cardChangeEl.className = `score-change tracking-card-score-change ${change > 0 ? 'positive' : 'negative'}`;
+    cardChangeEl.textContent = change > 0 ? `+${change}` : `${change}`;
+    cardChangeEl.style.position = 'absolute';
+    cardChangeEl.style.pointerEvents = 'none';
+    cardChangeEl.style.zIndex = '1000'; // トラッキングカード(900)の前面
+    cardChangeEl.style.left = '95%';
+    cardChangeEl.style.top = '-30px';
+    cardChangeEl.style.transform = 'translateX(-50%)';
+    
+    // tracking-headerに追加（相対位置指定のため）
+    const trackingHeader = trackingScore.closest('.tracking-header');
+    if (trackingHeader) {
+        // tracking-headerをrelative配置に設定
+        trackingHeader.style.position = 'relative';
+        trackingHeader.appendChild(cardChangeEl);
+    }
+    
+    return cardChangeEl;
+}
+
+/**
+ * 点数変化ポップアップの位置を更新
+ * @param {string} characterId - キャラクターID
+ */
+function updateScorePopupPosition(characterId) {
+    const popup = activeScorePopups[characterId];
+    if (!popup || !popup.element) return;
+    
+    // SVGマーカーを取得
+    const marker = document.querySelector(`#interactive-markers g[data-character-id="${characterId}"]`);
+    if (!marker) return;
+    
+    // マーカーのcircle要素から位置を取得（半径20または23の円を探す）
+    const circle = marker.querySelector('circle[r="20"]') || marker.querySelector('circle[r="23"]');
+    if (!circle) return;
+    
+    const cx = parseFloat(circle.getAttribute('cx'));
+    const cy = parseFloat(circle.getAttribute('cy'));
+    
+    // ポップアップの位置を更新（マーカーの上に配置）
+    popup.element.style.left = `${cx}px`;
+    popup.element.style.top = `${cy - 30}px`;
+}
+
+/**
+ * すべてのアクティブな点数変化ポップアップの位置を更新
+ */
+function updateAllScorePopupPositions() {
+    Object.keys(activeScorePopups).forEach(characterId => {
+        updateScorePopupPosition(characterId);
+    });
 }
 
 /**
@@ -402,6 +525,7 @@ window.showTrackingCard = showTrackingCard;
 window.hideTrackingCard = hideTrackingCard;
 window.updateTrackingInfo = updateTrackingInfo;
 window.getCurrentTrackingCharacterId = getCurrentTrackingCharacterId;
+window.updateAllScorePopupPositions = updateAllScorePopupPositions;
 
 // トラッキング状態を外部から参照できるように
 Object.defineProperty(window, 'currentTrackingCharacterId', {

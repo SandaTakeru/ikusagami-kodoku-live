@@ -209,6 +209,90 @@ function updateDateTimeDisplay(percentage, lang = 'ja') {
     if (typeof updateTrackingInfo === 'function') {
         updateTrackingInfo();
     }
+    
+    // 天文条件の更新
+    if (typeof updateAstronomyDisplay === 'function') {
+        updateAstronomyDisplay(currentDate, lang);
+    }
+}
+
+/**
+ * 天文条件の表示を更新（絵文字アイコン）
+ * @param {Date} currentDate - 現在の日時
+ * @param {string} lang - 言語コード ('ja' or 'en')
+ */
+function updateAstronomyDisplay(currentDate, lang = 'ja') {
+    // astronomyData.jsのgetAstronomyConditions関数を使用
+    if (typeof getAstronomyConditions !== 'function') {
+        return;
+    }
+    
+    const conditions = getAstronomyConditions(currentDate);
+    const iconElement = document.getElementById('astronomy-icon');
+    
+    if (!iconElement) {
+        return;
+    }
+    
+    // 日の出・日の入り時刻をDateオブジェクトに変換
+    const sunriseTime = parseTimeStringForConditions(currentDate, conditions.sunrise);
+    const sunsetTime = parseTimeStringForConditions(currentDate, conditions.sunset);
+    
+    // 日の出・日の入りの前後0.5時間の範囲を計算
+    const halfHourMs = 30 * 60 * 1000; // 30分のミリ秒
+    const sunriseStart = new Date(sunriseTime.getTime() - halfHourMs);
+    const sunriseEnd = new Date(sunriseTime.getTime() + halfHourMs);
+    const sunsetStart = new Date(sunsetTime.getTime() - halfHourMs);
+    const sunsetEnd = new Date(sunsetTime.getTime() + halfHourMs);
+
+    // 絵文字とツールチップテキストを条件に応じて変更
+    let emoji = '';
+    let tooltipText = '';
+    
+    // 日の出前後1時間の判定
+    if (currentDate >= sunriseStart && currentDate < sunriseEnd) {
+        emoji = '🌅';
+        tooltipText = lang === 'ja' ? `日の出（${conditions.sunrise}）` : `Sunrise (${conditions.sunrise})`;
+    }
+    // 日の入り前後1時間の判定
+    else if (currentDate >= sunsetStart && currentDate < sunsetEnd) {
+        emoji = '🌇';
+        tooltipText = lang === 'ja' ? `日の入り（${conditions.sunset}）` : `Sunset (${conditions.sunset})`;
+    }
+    // 通常の日中
+    else if (conditions.isDaytime) {
+        emoji = '☀️';
+        tooltipText = lang === 'ja' ? '日中' : 'Daytime';
+    }
+    // 月が見える時
+    else if (conditions.isMoonVisible) {
+        emoji = getMoonPhaseEmoji(conditions.moonPhase);
+        const moonPhaseName = getMoonPhaseName(conditions.moonPhase, lang);
+        tooltipText = lang === 'ja' 
+            ? `${moonPhaseName}（月齢${conditions.moonAge.toFixed(1)}）`
+            : `${moonPhaseName} (Age: ${conditions.moonAge.toFixed(1)})`;
+    }
+    // 夜間（星のみ）
+    else {
+        emoji = '✨';
+        tooltipText = lang === 'ja' ? '夜間' : 'Night';
+    }
+    
+    iconElement.textContent = emoji;
+    iconElement.setAttribute('title', tooltipText);
+}
+
+/**
+ * 時刻文字列(HH:MM)を現在日付のDateオブジェクトに変換
+ * @param {Date} baseDate - 基準となる日付
+ * @param {string} timeStr - 時刻文字列 (HH:MM)
+ * @returns {Date} 時刻を設定したDateオブジェクト
+ */
+function parseTimeStringForConditions(baseDate, timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date(baseDate);
+    date.setHours(hours, minutes, 0, 0);
+    return date;
 }
 
 /**
@@ -236,3 +320,5 @@ function updateTimelineRange(volume) {
         updateDateTime(maxPercentage);
     }
 }
+
+

@@ -213,7 +213,7 @@ function addRouteLayer() {
             'text-field': ['get', 'name'],
             'text-font': ['Noto Sans Regular'],
             'text-size': 12,
-            'symbol-placement': 'line',
+            'symbol-placement': 'line-center',
             'text-rotation-alignment': 'map',
             'text-pitch-alignment': 'viewport'
         },
@@ -236,7 +236,8 @@ function addRouteLayer() {
             'text-size': 16,
             'symbol-placement': 'line',
             'text-rotation-alignment': 'map',
-            'text-pitch-alignment': 'viewport'
+            'text-pitch-alignment': 'viewport',
+            'symbol-spacing': 999,
         },
         paint: {
             'text-color': '#BE3C32',
