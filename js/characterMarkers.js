@@ -273,14 +273,15 @@ function getInterpolatedCharacterPositions(targetTime) {
                     properties: beforePoint.properties
                 };
             } else if (afterPoint) {
-                // 2点間を東海道のルート上で補間
+                // 2点間を東海道のルート上で補間（キャラクターIDを渡す）
                 try {
                     const interpolated = interpolateAlongTokaido(
                         beforePoint.coordinates,
                         afterPoint.coordinates,
                         beforePoint.timestamp,
                         afterPoint.timestamp,
-                        targetTimestamp
+                        targetTimestamp,
+                        parseInt(characterId)  // キャラクターIDを渡す
                     );
                     
                     if (interpolated) {

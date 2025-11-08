@@ -263,17 +263,22 @@ function changeBaseMapStyle(styleKey) {
     if (isFromRekichizu) {
         mapLogger.debug('れきちずのレイヤーをクリーンアップ');
         
-        // れきちずのレイヤーを削除（route/syukuba以外）
+        // れきちずのレイヤーを削除（line/syukuba/landmark以外）
         map.getStyle().layers.forEach(layer => {
-            const isRouteOrSyukuba = layer.id.startsWith('route-') || layer.id.startsWith('syukuba-');
-            if (!isRouteOrSyukuba && map.getLayer(layer.id)) {
+            const isLineOrSyukubaOrLandmark = layer.id.startsWith('line-') || 
+                                               layer.id.startsWith('syukuba-') || 
+                                               layer.id.startsWith('landmark-');
+            if (!isLineOrSyukubaOrLandmark && map.getLayer(layer.id)) {
                 map.removeLayer(layer.id);
             }
         });
         
-        // れきちずのソースを削除（route/syukuba以外）
+        // れきちずのソースを削除（straight-lines/syukuba/landmark以外）
         Object.keys(map.getStyle().sources).forEach(sourceId => {
-            if (sourceId !== 'route-source' && sourceId !== 'syukuba-source' && map.getSource(sourceId)) {
+            if (sourceId !== 'straight-lines-source' && 
+                sourceId !== 'syukuba-source' && 
+                sourceId !== 'landmark-source' && 
+                map.getSource(sourceId)) {
                 map.removeSource(sourceId);
             }
         });
@@ -355,10 +360,10 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                 });
             }
             
-            // ルートレイヤーがあればその前に、なければ最背面に配置
-            const routeLayerId = map.getLayer('route-layer-other') ? 'route-layer-other' : undefined;
+            // 直線レイヤーがあればその前に、なければ最背面に配置
+            const lineLayerId = map.getLayer('line-layer-other') ? 'line-layer-other' : undefined;
             
-            // 塗りつぶしレイヤーを追加（最背面またはルートの前）
+            // 塗りつぶしレイヤーを追加（最背面または直線レイヤーの前）
             if (!map.getLayer('ryoseikoku-fill')) {
                 map.addLayer({
                     id: 'ryoseikoku-fill',
@@ -368,7 +373,7 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'fill-color': '#C9BA96',
                         'fill-opacity': 1
                     }
-                }, routeLayerId);
+                }, lineLayerId);
             }
             
             // 境界線レイヤーを追加
@@ -381,7 +386,7 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'line-color': '#362F2D',
                         'line-width': 2
                     }
-                }, routeLayerId);
+                }, lineLayerId);
             }
             
             // ラベルレイヤーを追加
@@ -393,7 +398,6 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                     layout: {
                         'text-field': ['concat', ['get', '国名'], '国'],
                         'text-size': 20,
-                        'text-font': ['Noto Sans CJK JP Regular'],
                         'text-writing-mode': ['vertical'],
                         'symbol-placement': 'point',
                         'symbol-avoid-edges': true,
@@ -410,12 +414,12 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
                         'text-halo-color': '#fff',
                         'text-halo-width': 2
                     }
-                }, routeLayerId);
+                }, lineLayerId);
             }
             
-            // ルートレイヤーとシュクバレイヤーが追加されていない場合は追加
-            if (!routeLayerId && typeof readdRouteLayer === 'function') {
-                mapLogger.info('令制国ロード後にルートレイヤーを追加');
+            // 直線レイヤーとシュクバレイヤーが追加されていない場合は追加
+            if (!lineLayerId && typeof readdRouteLayer === 'function') {
+                mapLogger.info('令制国ロード後に直線レイヤーを追加');
                 setTimeout(() => {
                     if (map.isStyleLoaded()) {
                         readdRouteLayer();
@@ -427,4 +431,84 @@ function loadRyoseikokuGeoJSON(geoJSONPath) {
             mapLogger.error('令制国GeoJSONの読み込みエラー:', error);
         });
 }
+
+/**
+ * マップラベルの言語を更新
+ * @param {string} lang - 言語コード ('ja' or 'en')
+ */
+function updateMapLabelsLanguage(lang) {
+    if (!map) {
+        console.error('Map is not initialized');
+        return;
+    }
+    
+    console.log(`Starting language update to: ${lang}`);
+    
+    try {
+        // 令制国ラベル
+        if (map.getLayer('ryoseikoku-label')) {
+            const textField = lang === 'en' 
+                ? ['get', 'en_国名']
+                : ['concat', ['get', '国名'], '国'];
+            const writingMode = lang === 'en' ? [] : ['vertical'];
+            
+            console.log('Updating ryoseikoku-label with:', { textField, writingMode });
+            map.setLayoutProperty('ryoseikoku-label', 'text-field', textField);
+            map.setLayoutProperty('ryoseikoku-label', 'text-writing-mode', writingMode);
+            console.log('✓ ryoseikoku-label updated');
+        } else {
+            console.warn('ryoseikoku-label layer not found');
+        }
+        
+        // 宿場ラベル（通常）
+        if (map.getLayer('syukuba-label')) {
+            const fieldName = lang === 'en' ? 'en_name' : '宿場名';
+            map.setLayoutProperty('syukuba-label', 'text-field', ['get', fieldName]);
+            console.log('✓ syukuba-label updated');
+        }
+        
+        // 宿場ラベル（関所）
+        if (map.getLayer('syukuba-checkpoint-label')) {
+            const fieldName = lang === 'en' ? 'en_name' : '宿場名';
+            map.setLayoutProperty('syukuba-checkpoint-label', 'text-field', ['get', fieldName]);
+            console.log('✓ syukuba-checkpoint-label updated');
+        }
+        
+        // 宿場ラベル（関所・太字）
+        if (map.getLayer('syukuba-sekisho-label')) {
+            const fieldName = lang === 'en' ? 'en_name' : '宿場名';
+            const writingMode = lang === 'en' ? [] : ['vertical'];
+            map.setLayoutProperty('syukuba-sekisho-label', 'text-field', ['get', fieldName]);
+            map.setLayoutProperty('syukuba-sekisho-label', 'text-writing-mode', writingMode);
+            console.log('✓ syukuba-sekisho-label updated');
+        }
+        
+        // 宿場の点数ラベル（関所）
+        if (map.getLayer('syukuba-sekisho-point-label')) {
+            const textField = lang === 'en' 
+                ? ['concat', ['get', '蠱毒通過点数'], ' pts']
+                : ['concat', ['get', '漢字_蠱毒通過点数'], '点'];
+            const writingMode = lang === 'en' ? [] : ['vertical'];
+            map.setLayoutProperty('syukuba-sekisho-point-label', 'text-field', textField);
+            map.setLayoutProperty('syukuba-sekisho-point-label', 'text-writing-mode', writingMode);
+            console.log('✓ syukuba-sekisho-point-label updated');
+        }
+        
+        // ランドマークラベル
+        if (map.getLayer('landmark-label')) {
+            const fieldName = lang === 'en' ? 'en_名前' : '名前';
+            map.setLayoutProperty('landmark-label', 'text-field', ['get', fieldName]);
+            console.log('✓ landmark-label updated');
+        }
+        
+        mapLogger.info(`Map labels updated to ${lang}`);
+        console.log(`Language update completed: ${lang}`);
+    } catch (error) {
+        console.error('Failed to update map labels:', error);
+        mapLogger.error('Failed to update map labels:', error);
+    }
+}
+
+// グローバルに公開
+window.updateMapLabelsLanguage = updateMapLabelsLanguage;
 

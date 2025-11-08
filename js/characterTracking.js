@@ -384,6 +384,30 @@ function checkAndShowScoreChange(characterId, newScore) {
 function showScoreChangeOnIcon(characterId, change) {
     if (change === 0) return;
     
+    // フィルタ状態を確認：フィルタで非表示の場合はポップアップを表示しない
+    const numId = parseInt(characterId);
+    const character = CHARACTERS[numId];
+    if (!character) return;
+    
+    const isWithinVolume = character.volume <= AppState.currentVolume;
+    const isEnabled = AppState.enabledCharacters.has(numId);
+    const shouldShow = isWithinVolume && isEnabled;
+    
+    if (!shouldShow) {
+        // フィルタで非表示の場合、既存のポップアップも削除
+        if (activeScorePopups[characterId]) {
+            const existing = activeScorePopups[characterId];
+            if (existing.element && existing.element.parentNode) {
+                existing.element.remove();
+            }
+            if (existing.cardElement && existing.cardElement.parentNode) {
+                existing.cardElement.remove();
+            }
+            delete activeScorePopups[characterId];
+        }
+        return;
+    }
+    
     // 既存の点数変化表示を削除（同じキャラクターID用）
     if (activeScorePopups[characterId]) {
         const existing = activeScorePopups[characterId];
@@ -484,6 +508,27 @@ function updateScorePopupPosition(characterId) {
     const popup = activeScorePopups[characterId];
     if (!popup || !popup.element) return;
     
+    // フィルタ状態を確認：非表示の場合はポップアップを削除
+    const numId = parseInt(characterId);
+    const character = CHARACTERS[numId];
+    if (character) {
+        const isWithinVolume = character.volume <= AppState.currentVolume;
+        const isEnabled = AppState.enabledCharacters.has(numId);
+        const shouldShow = isWithinVolume && isEnabled;
+        
+        if (!shouldShow) {
+            // フィルタで非表示の場合、ポップアップを削除
+            if (popup.element && popup.element.parentNode) {
+                popup.element.remove();
+            }
+            if (popup.cardElement && popup.cardElement.parentNode) {
+                popup.cardElement.remove();
+            }
+            delete activeScorePopups[characterId];
+            return;
+        }
+    }
+    
     // SVGマーカーを取得
     const marker = document.querySelector(`#interactive-markers g[data-character-id="${characterId}"]`);
     if (!marker) return;
@@ -510,6 +555,35 @@ function updateAllScorePopupPositions() {
 }
 
 /**
+ * フィルタで非表示になったキャラクターのポップアップをクリーンアップ
+ */
+function cleanupHiddenScorePopups() {
+    Object.keys(activeScorePopups).forEach(characterId => {
+        const numId = parseInt(characterId);
+        const character = CHARACTERS[numId];
+        if (!character) return;
+        
+        const isWithinVolume = character.volume <= AppState.currentVolume;
+        const isEnabled = AppState.enabledCharacters.has(numId);
+        const shouldShow = isWithinVolume && isEnabled;
+        
+        // フィルタで非表示の場合、ポップアップを削除
+        if (!shouldShow) {
+            const popup = activeScorePopups[characterId];
+            if (popup) {
+                if (popup.element && popup.element.parentNode) {
+                    popup.element.remove();
+                }
+                if (popup.cardElement && popup.cardElement.parentNode) {
+                    popup.cardElement.remove();
+                }
+                delete activeScorePopups[characterId];
+            }
+        }
+    });
+}
+
+/**
  * 現在トラッキング中のキャラクターIDを取得
  * @returns {string|null} キャラクターID
  */
@@ -526,6 +600,7 @@ window.hideTrackingCard = hideTrackingCard;
 window.updateTrackingInfo = updateTrackingInfo;
 window.getCurrentTrackingCharacterId = getCurrentTrackingCharacterId;
 window.updateAllScorePopupPositions = updateAllScorePopupPositions;
+window.cleanupHiddenScorePopups = cleanupHiddenScorePopups;
 
 // トラッキング状態を外部から参照できるように
 Object.defineProperty(window, 'currentTrackingCharacterId', {

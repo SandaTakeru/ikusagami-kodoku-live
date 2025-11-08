@@ -228,6 +228,11 @@ function updateCharacterMarkerVisibility() {
         }
     }
     
+    // フィルタで非表示になったキャラクターの得点ポップアップをクリア
+    if (typeof window.cleanupHiddenScorePopups === 'function') {
+        window.cleanupHiddenScorePopups();
+    }
+    
     // SVGマーカーの表示状態を更新（updateOverlapLayoutに任せる）
     // updateOverlapLayoutがフィルタ状態を反映して全てのSVGマーカーを正しく制御する
     if (typeof updateOverlapLayout === 'function') {

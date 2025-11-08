@@ -262,6 +262,16 @@ function applySpoilerFilter(readVolume) {
     if (typeof updateCharacterMarkerVisibility === 'function') {
         updateCharacterMarkerVisibility();
     }
+    
+    // ランドマークレイヤーのフィルタを更新
+    if (typeof updateLandmarkVisibility === 'function') {
+        updateLandmarkVisibility(readVolume);
+    }
+    
+    // 直線レイヤー(line.geojson)のフィルタを更新
+    if (typeof updateStraightLinesVisibility === 'function') {
+        updateStraightLinesVisibility(readVolume);
+    }
 }
 
 /**
@@ -287,6 +297,11 @@ function initLanguageToggle() {
         if (typeof updateMarkerLanguage === 'function') {
             updateMarkerLanguage('ja');
         }
+        
+        // マップラベルの言語を更新
+        if (typeof updateMapLabelsLanguage === 'function') {
+            updateMapLabelsLanguage('ja');
+        }
     });
     
     langEnBtn.addEventListener('click', () => {
@@ -304,6 +319,11 @@ function initLanguageToggle() {
         // マーカーの言語を更新
         if (typeof updateMarkerLanguage === 'function') {
             updateMarkerLanguage('en');
+        }
+        
+        // マップラベルの言語を更新
+        if (typeof updateMapLabelsLanguage === 'function') {
+            updateMapLabelsLanguage('en');
         }
     });
 }
