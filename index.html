@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>イクサガミ蠱毒Live β</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.ico">
+    
     <!-- MapLibre GL JS -->
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -77,10 +81,12 @@
     
     <!-- Character Tracking Card -->
     <div id="tracking-card" class="tracking-card" style="display: none;">
+        <button id="tracking-prev" class="tracking-nav tracking-nav-prev" title="前のキャラクター">◀</button>
+        <button id="tracking-next" class="tracking-nav tracking-nav-next" title="次のキャラクター">▶</button>
         <button id="tracking-close" class="tracking-close" title="閉じる">×</button>
         <div class="tracking-content">
             <div class="tracking-header">
-                <span id="tracking-id" class="tracking-id">木札No. —</span>
+                <span id="tracking-id" class="tracking-id">木札</span>
                 <h3 id="tracking-name" class="tracking-name">キャラクター名</h3>
                 <span id="tracking-score" class="tracking-score">— 点</span>
             </div>

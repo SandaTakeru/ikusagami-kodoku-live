@@ -46,8 +46,11 @@ function initCharacterFilter(maxVolume = 4, lang = 'ja') {
     // 指定巻数までのキャラクターを取得
     const characterIds = getCharacterIdsByVolume(maxVolume);
     
-    // 有効なキャラクターセットを初期化
-    AppState.enabledCharacters = new Set(characterIds);
+    // 有効なキャラクターセットを初期化（デフォルト表示キャラクターのみ）
+    // DEFAULT_ENABLED_CHARACTERSのうち、指定巻数までのキャラクターのみを有効化
+    AppState.enabledCharacters = new Set(
+        DEFAULT_ENABLED_CHARACTERS.filter(id => characterIds.includes(id))
+    );
     
     // キャラクターごとにフィルタアイテムを生成
     characterIds.forEach(id => {
@@ -55,7 +58,9 @@ function initCharacterFilter(maxVolume = 4, lang = 'ja') {
         if (!char) return;
 
         const item = document.createElement('div');
-        item.className = 'character-filter-item active';
+        // デフォルト表示キャラクターのみactiveクラスを付与
+        const isDefaultEnabled = AppState.enabledCharacters.has(id);
+        item.className = isDefaultEnabled ? 'character-filter-item active' : 'character-filter-item';
         item.dataset.characterId = id;
         
         // アイテム全体の背景色とボーダー色を設定

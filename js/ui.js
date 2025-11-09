@@ -28,7 +28,9 @@ window.UI_TEXTS = {
         },
         characterFilterTitle: 'キャラクターフィルタ',
         trackingClose: '閉じる',
-        trackingId: '木札No.',
+        trackingPrev: '前のキャラクター',
+        trackingNext: '次のキャラクター',
+        trackingId: '木札',
         trackingScore: '点',
         trackingNoInfo: 'まだ蠱毒が開始されていません',
         playTitle: '再生/一時停止',
@@ -66,7 +68,9 @@ window.UI_TEXTS = {
         },
         characterFilterTitle: 'Character Filter',
         trackingClose: 'Close',
-        trackingId: 'Tag No.',
+        trackingPrev: 'Previous Character',
+        trackingNext: 'Next Character',
+        trackingId: 'No.',
         trackingScore: 'pt',
         trackingNoInfo: 'The Kodoku has not started yet',
         playTitle: 'Play/Pause',
@@ -275,11 +279,36 @@ function applySpoilerFilter(readVolume) {
 }
 
 /**
+ * ユーザーのブラウザ言語設定から初期言語を検出
+ * @returns {string} 'ja' または 'en'
+ */
+function detectUserLanguage() {
+    // navigator.language または navigator.languages から言語を取得
+    const userLang = (navigator.language || navigator.languages?.[0] || 'ja').toLowerCase();
+    
+    // 日本語の場合は 'ja'、それ以外は 'en'
+    if (userLang.startsWith('ja')) {
+        return 'ja';
+    }
+    return 'en';
+}
+
+/**
  * 言語トグルの初期化
  */
 function initLanguageToggle() {
     const langJaBtn = document.getElementById('lang-ja');
     const langEnBtn = document.getElementById('lang-en');
+    
+    // ブラウザ言語設定に基づいて初期言語を設定
+    const initialLang = detectUserLanguage();
+    if (initialLang === 'en') {
+        langEnBtn.classList.add('active');
+        langJaBtn.classList.remove('active');
+    } else {
+        langJaBtn.classList.add('active');
+        langEnBtn.classList.remove('active');
+    }
     
     langJaBtn.addEventListener('click', () => {
         langJaBtn.classList.add('active');
@@ -439,6 +468,17 @@ function updateUILanguage(lang) {
     const trackingClose = document.getElementById('tracking-close');
     if (trackingClose) {
         trackingClose.title = texts.trackingClose;
+    }
+    
+    // トラッキングカードのナビゲーションボタン
+    const trackingPrev = document.getElementById('tracking-prev');
+    if (trackingPrev) {
+        trackingPrev.title = texts.trackingPrev;
+    }
+    
+    const trackingNext = document.getElementById('tracking-next');
+    if (trackingNext) {
+        trackingNext.title = texts.trackingNext;
     }
     
     // トラッキング情報を更新（現在トラッキング中の場合）

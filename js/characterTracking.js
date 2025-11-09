@@ -62,6 +62,18 @@ function initializeTracking() {
         closeBtn.addEventListener('click', hideTrackingCard);
     }
 
+    // 前へボタンのイベント
+    const prevBtn = document.getElementById('tracking-prev');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => navigateTracking('prev'));
+    }
+
+    // 次へボタンのイベント
+    const nextBtn = document.getElementById('tracking-next');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => navigateTracking('next'));
+    }
+
     // 初期状態では非表示
     hideTrackingCard();
     
@@ -590,6 +602,56 @@ function cleanupHiddenScorePopups() {
 function getCurrentTrackingCharacterId() {
     return currentTrackingCharacterId;
 }
+
+/**
+ * 表示中のキャラクターIDのリストを取得（ID順でソート）
+ * @returns {number[]} 表示中のキャラクターIDの配列
+ */
+function getVisibleCharacterIds() {
+    const visibleIds = [];
+    
+    // AppStateから有効なキャラクターを取得
+    if (typeof AppState !== 'undefined' && AppState.enabledCharacters) {
+        AppState.enabledCharacters.forEach(id => {
+            const character = CHARACTERS[id];
+            if (character && character.volume <= AppState.currentVolume) {
+                visibleIds.push(id);
+            }
+        });
+    }
+    
+    // ID順でソート
+    return visibleIds.sort((a, b) => a - b);
+}
+
+/**
+ * トラッキング対象を前後に切り替え
+ * @param {string} direction - 'prev' または 'next'
+ */
+function navigateTracking(direction) {
+    if (!currentTrackingCharacterId) return;
+    
+    const visibleIds = getVisibleCharacterIds();
+    if (visibleIds.length === 0) return;
+    
+    const currentId = parseInt(currentTrackingCharacterId);
+    const currentIndex = visibleIds.indexOf(currentId);
+    
+    if (currentIndex === -1) return;
+    
+    let nextIndex;
+    if (direction === 'prev') {
+        // 前のキャラクターへ（最初の場合は最後に戻る）
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : visibleIds.length - 1;
+    } else {
+        // 次のキャラクターへ（最後の場合は最初に戻る）
+        nextIndex = currentIndex < visibleIds.length - 1 ? currentIndex + 1 : 0;
+    }
+    
+    const nextCharacterId = visibleIds[nextIndex].toString();
+    showTrackingCard(nextCharacterId);
+}
+
 
 // ========================================
 // エクスポート（グローバルスコープに公開）

@@ -172,14 +172,23 @@ function initMap() {
         initialZoom = 10;
     }
     
-    // 初期背景色を設定（令制国の場合は #264348）
+    // 初期背景色を設定(令制国の場合は #264348)
     document.body.style.backgroundColor = '#264348';
+    
+    // 日本全体の表示範囲を制限（南西端と北東端）
+    const japanBounds = [
+        [122.0, 24.0], // 南西端 [経度, 緯度]
+        [154.0, 46.0]  // 北東端 [経度, 緯度]
+    ];
     
     map = new maplibregl.Map({
         container: 'map',
         style: BASE_MAP_STYLES['ryoseikoku'].style, // 初期スタイルは「令制国」
         center: initialCenter,
         zoom: initialZoom,
+        minZoom: 5,  // 最小ズームレベル（日本全体が見える程度）
+        maxZoom: 18, // 最大ズームレベル
+        maxBounds: japanBounds, // 移動範囲を日本周辺に制限
         pitch: 0,
         bearing: 0,
         attributionControl: false // デフォルトのAttributionControlを無効化

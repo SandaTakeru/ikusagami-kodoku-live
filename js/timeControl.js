@@ -13,7 +13,10 @@ function initTimelineSlider() {
     
     // スライダー変更時
     slider.addEventListener('input', (e) => {
-        const percentage = e.target.value;
+        let percentage = parseFloat(e.target.value);
+        // 0未満にならないように制限
+        percentage = Math.max(0, percentage);
+        e.target.value = percentage;
         updateDateTime(percentage);
     });
     
@@ -44,12 +47,11 @@ function initTimelineSlider() {
         }
     });
     
-    // 初期表示
-    updateDateTime(0);
+    // 速度表示を更新
     updateSpeedDisplay();
     
-    // 初期のスライダー範囲を設定
-    updateTimelineRange(AppState.currentVolume);
+    // 初期のスライダー範囲と位置を設定（サイトアクセス時は常に明治11年5月5日0時）
+    updateTimelineRange(AppState.currentVolume, true);
 }
 
 /**
@@ -112,6 +114,9 @@ function startAnimation() {
         const maxMilliseconds = maxDate - START_DATE;
         const maxPercentage = (maxMilliseconds / TOTAL_MILLISECONDS) * 100;
         
+        // 0未満にならないように制限
+        currentValue = Math.max(0, currentValue);
+        
         // 終端に達したら停止
         if (currentValue >= maxPercentage) {
             currentValue = maxPercentage;
@@ -158,6 +163,9 @@ function updateDateTime(percentage) {
  * @param {string} lang - 言語コード ('ja' or 'en')
  */
 function updateDateTimeDisplay(percentage, lang = 'ja') {
+    // パーセンテージが0未満にならないように制限
+    percentage = Math.max(0, percentage);
+    
     const currentMilliseconds = (percentage / 100) * TOTAL_MILLISECONDS;
     const currentDate = new Date(START_DATE.getTime() + currentMilliseconds);
     
@@ -298,8 +306,9 @@ function parseTimeStringForConditions(baseDate, timeStr) {
 /**
  * 時系列スライダーの範囲を更新
  * @param {number} volume - 既読巻数（1-4）
+ * @param {boolean} isInitialLoad - サイトアクセス時の初期読み込みかどうか
  */
-function updateTimelineRange(volume) {
+function updateTimelineRange(volume, isInitialLoad = false) {
     const slider = document.getElementById('timeline-slider');
     if (!slider) return;
     
@@ -308,17 +317,24 @@ function updateTimelineRange(volume) {
     const maxMilliseconds = maxDate - START_DATE;
     const maxPercentage = (maxMilliseconds / TOTAL_MILLISECONDS) * 100;
     
-    // 現在のスライダー位置を取得
-    const currentValue = parseFloat(slider.value);
-    
     // スライダーの最大値を更新
     slider.max = maxPercentage;
     
-    // 現在位置が新しい最大値を超えていたら、最大値に設定
-    if (currentValue > maxPercentage) {
-        slider.value = maxPercentage;
-        updateDateTime(maxPercentage);
+    // スライダー位置を設定
+    let targetPercentage;
+    if (isInitialLoad) {
+        // サイトアクセス時は常に明治11年5月5日0時（START_DATE）
+        targetPercentage = 0;
+    } else {
+        // ネタバレフィルタ変更時は巻数に応じた初期日時
+        const initialDate = VOLUME_INITIAL_DATES[volume];
+        const initialMilliseconds = initialDate - START_DATE;
+        targetPercentage = (initialMilliseconds / TOTAL_MILLISECONDS) * 100;
     }
+    
+    // スライダーを設定位置に移動
+    slider.value = targetPercentage;
+    updateDateTime(targetPercentage);
 }
 
 

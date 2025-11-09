@@ -21,13 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initSpoilerFilter === 'function') {
         initSpoilerFilter();
     }
+    
+    // 言語トグルを初期化（ブラウザ言語設定を検出して自動設定）
     if (typeof initLanguageToggle === 'function') {
         initLanguageToggle();
     }
     
-    // 初期UI言語を日本語に設定
+    // 検出された言語でUI言語を設定
+    const detectedLang = typeof detectUserLanguage === 'function' ? detectUserLanguage() : 'ja';
     if (typeof updateUILanguage === 'function') {
-        updateUILanguage('ja');
+        updateUILanguage(detectedLang);
     }
     
     if (typeof initBaseMapToggle === 'function') {
@@ -40,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initInfoLink();
     }
     
-    // キャラクターフィルタの初期化
+    // キャラクターフィルタの初期化（検出された言語を使用）
     const initialVolume = parseInt(document.getElementById('spoiler-filter').value);
     if (typeof initCharacterFilter === 'function') {
-        initCharacterFilter(initialVolume, 'ja');
+        initCharacterFilter(initialVolume, detectedLang);
     }
     
     // メニューパネルの高さを初期設定（画面サイズに応じた最大長に）

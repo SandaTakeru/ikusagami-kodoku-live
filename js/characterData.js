@@ -22,14 +22,15 @@ const CHARACTERS = {
     // ========== 1巻登場キャラクター ==========
     199: { name: '祇園 三助',     nameEn: 'Gion Sansuke',         icon: '三', iconEn: 'GS', color: '#D66A35', volume: 1 },
     7:   { name: '化野 四蔵',     nameEn: 'Adashino Shikura',       icon: '四', iconEn: 'AS', color: '#674598', volume: 1 },
-    168: { name: '衣笠 彩八',     nameEn: 'Kinugasa Iroha',    icon: '八', iconEn: 'KI', color: '#5F7C8A', volume: 1 },
+    168: { name: '衣笠 彩八',     nameEn: 'Kinugasa Iroha',    icon: '八', iconEn: 'KI', color: '#8E4C6B', volume: 1 },
 
     4:   { name: '安藤 神兵衛',   nameEn: 'Andou Jinbei',          icon: '安', iconEn: 'AJ', color: '#00A0BC', volume: 1 },
     107: { name: '立川 幸右衛門',   nameEn: 'Tachikawa Kouemon',      icon: '考', iconEn: 'TK', color: '#7B3F00', volume: 1 },
+    15:  { name: '尾鷲 孫太郎',     nameEn: 'Owase Magotaro',        icon: '尾', iconEn: 'OM', color: '#005D7B', volume: 1 },
     277: { name: 'カムイコチャ',   nameEn: 'Kamuikotcha',          icon: 'カ', iconEn: 'K', color: '#00A0BC', volume: 1 },
     19:  { name: '菊臣 右京',     nameEn: 'Kikuomi Ukyo',         icon: '右', iconEn: 'KU', color: '#4C6CB3', volume: 1 },
     66:  { name: '貫地谷 無骨',   nameEn: 'Kanjiya Bukotsu',      icon: '無', iconEn: 'KB', color: '#3E4145', volume: 1 },
-    269: { name: '狭山 進次郎',   nameEn: 'Sayama Shinjiro',      icon: '進', iconEn: 'SS', color: '#E6B422', volume: 1 },
+    269: { name: '狭山 進次郎',   nameEn: 'Sayama Shinjiro',      icon: '進', iconEn: 'SS', color: '#4C6CB3', volume: 1 },
     30:  { name: '番場 大悟郎',   nameEn: 'Bamba Daigoro',        icon: '番', iconEn: 'BD', color: '#D57835', volume: 1 },
     230: { name: '赤山 宋適',   nameEn: 'Akayama Souteki',      icon: '宋', iconEn: 'AS', color: '#7B3F00', volume: 1 },
     231: { name: '川本 寅松',   nameEn: 'Kawamoto Toramatsu',   icon: '寅', iconEn: 'KT', color: '#005D7B', volume: 1 },
@@ -40,6 +41,7 @@ const CHARACTERS = {
     92:  { name: 'ギルバート',    nameEn: 'Gilbert Capel Coleman', icon: 'ギ', iconEn: 'GC', color: '#D7A233', volume: 2 },
     
     48:  { name: '宝蔵院 袁駿',   nameEn: 'Hozoin Enshun',        icon: '袁', iconEn: 'HE', color: '#44916D', volume: 2 },
+    178: { name: '桜順',     nameEn: 'Rou Jun',       icon: '桜', iconEn: 'RJ', color: '#8E4C6B', volume: 2 },
     202: { name: '坂巻 伝内',   nameEn: 'Sakamaki Dennai',        icon: '伝', iconEn: 'SD', color: '#A0D8D0', volume: 2 },
 
     // ========== 3巻登場キャラクター ==========
@@ -65,7 +67,7 @@ const CHARACTERS = {
  * 表示順序を明示的に指定する配列を用意
  */
 const CHARACTER_ORDER = [
-    // 主要キャラクター（1巻）
+    // 主要キャラクター(1巻)
     108, 120, 99, 269,
     // 京八流キャラクター
     199, 7, 292, 168,
@@ -73,6 +75,20 @@ const CHARACTER_ORDER = [
     19, 66, 92, 142, 222, 277,
     // モブ以上
     1, 4, 11, 24, 30, 48, 84, 107, 111, 139, 160, 161, 163, 186, 202, 215, 251,
+];
+
+/**
+ * デフォルトで表示ONにするキャラクターID
+ * サイトアクセス時とネタバレフィルタ更新時に、
+ * これらのキャラクターのみが表示ON状態になる
+ */
+const DEFAULT_ENABLED_CHARACTERS = [
+    // 主要キャラクター(1巻)
+    108, 120, 99, 269,
+    // 京八流キャラクター
+    199, 7, 292, 168,
+    // 準レギュラーキャラクター
+    19, 66, 92, 142, 222, 277,
 ];
 
 /**
