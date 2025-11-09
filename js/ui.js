@@ -37,12 +37,7 @@ window.UI_TEXTS = {
         speedDownTitle: '速度ダウン',
         speedUpTitle: '速度アップ',
         infoTitle: 'このサイトについて',
-        infoContent: {
-            title: 'このサイトについて',
-            description: '当サイトは『イクサガミ』世界を地図で可視化した個人制作のファンサイトです。各キャラクターの現在位置や得点を、リアルタイムな地図アニメーションで表現しています。',
-            copyright: '著作権は著者・出版社・制作会社・背景地図配信者に帰属します。商用利用・転載を禁じます。なお、権利者または関係各社からの修正・削除等の要請があった場合は、速やかかつ誠実に対応いたします。',
-            note: '出典や使い方などの情報ページは準備中です。'
-        },
+        infoUrl: 'https://note.com/sandatakeru/n/na4b39c42044a',
         ampm: ['午前', '午後'],
         months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
     },
@@ -77,12 +72,7 @@ window.UI_TEXTS = {
         speedDownTitle: 'Slow Down',
         speedUpTitle: 'Speed Up',
         infoTitle: 'About',
-        infoContent: {
-            title: 'About This Site',
-            description: 'This is a fan-made website that visualizes the world of "Last Samurai Standing" on a map. It represents the current positions and scores of each character through real-time map animations.',
-            copyright: 'Copyright belongs to the author, publisher, production company, and base map providers. Commercial use and reproduction are prohibited. If there is a request for correction or deletion from the rights holder or related parties, we will respond promptly and sincerely.',
-            note: 'Information pages about sources and usage are in preparation.'
-        },
+        infoUrl: 'https://note.com/sandatakeru/n/na4b39c42044a',
         ampm: ['AM', 'PM'],
         months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     }
@@ -557,12 +547,9 @@ function initInfoLink() {
     infoLink.addEventListener('click', (e) => {
         e.preventDefault();
         const texts = UI_TEXTS[window.currentLanguage || 'ja'];
-        const info = texts.infoContent;
-        alert(
-            `${info.title}\n\n` +
-            `${info.description}\n\n` +
-            `${info.copyright}\n\n` +
-            `${info.note}`
-        );
+        const infoUrl = texts.infoUrl;
+        
+        // 新しいタブでnoteページを開く
+        window.open(infoUrl, '_blank', 'noopener,noreferrer');
     });
 }
