@@ -190,11 +190,8 @@ function updateTrackingInfo() {
     const percentage = parseFloat(slider.value);
     const currentMilliseconds = (percentage / 100) * TOTAL_MILLISECONDS;
     
-    // START_DATEはnew Date(1878, 4, 5, 0, 0, 0)でローカルタイム（JST）として作成
-    // 1878年当時の日本標準時はUTC+9:18:59だったため、
-    // GeoJSON（現代のJST=UTC+9:00で作成）との比較のため18分59秒を補正
-    const HISTORICAL_JST_OFFSET = 18 * 60 * 1000 + 59 * 1000; // 18分59秒
-    const currentDate = new Date(START_DATE.getTime() + currentMilliseconds + HISTORICAL_JST_OFFSET);
+    // GeoJSONのタイムスタンプは現代JST（UTC+9:00）で記録されているため、補正なしで比較
+    const currentDate = new Date(START_DATE.getTime() + currentMilliseconds);
 
     // このキャラクターの全ての地点データを取得
     const characterPoints = allPointsData.features.filter(
@@ -250,9 +247,8 @@ function updateTrackingInfo() {
                 ? (point.properties.memo_en || point.properties.memo || 'No information')
                 : (point.properties.memo || '情報なし');
             
-            // pointDateから歴史的なJST補正分（18分59秒）を引いて表示
-            const displayDate = new Date(pointDate.getTime() - HISTORICAL_JST_OFFSET);
-            const dateTimeStr = formatDateTime(displayDate);
+            // GeoJSONのタイムスタンプは現代JSTなので補正なしで表示
+            const dateTimeStr = formatDateTime(pointDate);
             
             infoLines.push(`${dateTimeStr}: ${memo}`);
         }
@@ -292,8 +288,7 @@ function updateAllCharacterScores() {
             if (!characterId) return;
             
             const currentMilliseconds = (percentage / 100) * TOTAL_MILLISECONDS;
-            const HISTORICAL_JST_OFFSET = 18 * 60 * 1000 + 59 * 1000;
-            const currentDate = new Date(START_DATE.getTime() + currentMilliseconds + HISTORICAL_JST_OFFSET);
+            const currentDate = new Date(START_DATE.getTime() + currentMilliseconds);
             
             const characterPoints = pointsGeoJSON.features.filter(
                 feature => feature.properties.character_id === parseInt(characterId)
@@ -334,8 +329,7 @@ function updateAllCharacterScores() {
         // 現在の時刻を取得
         const percentage = parseFloat(slider.value);
         const currentMilliseconds = (percentage / 100) * TOTAL_MILLISECONDS;
-        const HISTORICAL_JST_OFFSET = 18 * 60 * 1000 + 59 * 1000;
-        const currentDate = new Date(START_DATE.getTime() + currentMilliseconds + HISTORICAL_JST_OFFSET);
+        const currentDate = new Date(START_DATE.getTime() + currentMilliseconds);
         
         // このキャラクターの全ての地点データを取得
         const characterPoints = pointsGeoJSON.features.filter(

@@ -126,14 +126,6 @@ async function loadCharacterPoints() {
  * キャラクターごとのタイムラインを構築
  */
 /**
- * 明治時代の日本標準時オフセット（現代JSTとの差分）
- * 明治時代: +9時間18分59秒 (33539秒)
- * 現代JST: +9時間 (32400秒)
- * 差分: 1139秒 = 18分59秒
- */
-const MEIJI_JST_OFFSET_MS = 1139 * 1000; // 18分59秒をミリ秒に変換
-
-/**
  * 各キャラクターの最終タイムスタンプを格納
  * { characterId: lastTimestamp }
  */
@@ -161,12 +153,11 @@ function buildCharacterTimelines() {
             characterTimelines[characterId] = [];
         }
         
-        // タイムスタンプをパースして明治時代のオフセットを補正
-        const rawTimestamp = new Date(feature.properties.timestamp).getTime();
-        const correctedTimestamp = rawTimestamp - MEIJI_JST_OFFSET_MS;
+        // GeoJSONのタイムスタンプは現代JST（UTC+9:00）なので補正なしで使用
+        const timestamp = new Date(feature.properties.timestamp).getTime();
         
         characterTimelines[characterId].push({
-            timestamp: correctedTimestamp,
+            timestamp: timestamp,
             coordinates: feature.geometry.coordinates,
             properties: feature.properties
         });
