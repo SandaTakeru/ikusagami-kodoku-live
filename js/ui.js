@@ -307,6 +307,24 @@ function initLanguageToggle() {
         // UI言語を更新
         updateUILanguage('ja');
         
+        // 現在れきちずを表示している場合は再読み込み
+        const rekichizuBtn = document.getElementById('map-rekichizu');
+        if (rekichizuBtn && rekichizuBtn.classList.contains('active')) {
+            if (typeof changeBaseMapStyle === 'function') {
+                changeBaseMapStyle('rekichizu');
+            }
+        }
+        
+        // 現在地理院タイル（標準地図またはEnglish）を表示している場合は再読み込み
+        const gsiStdBtn = document.getElementById('map-gsi-std');
+        const gsiEnglishBtn = document.getElementById('map-gsi-english');
+        if ((gsiStdBtn && gsiStdBtn.classList.contains('active')) ||
+            (gsiEnglishBtn && gsiEnglishBtn.classList.contains('active'))) {
+            if (typeof changeBaseMapStyle === 'function') {
+                changeBaseMapStyle('gsi-std');
+            }
+        }
+        
         // キャラクターフィルタの言語を更新
         if (typeof updateCharacterFilterLanguage === 'function') {
             updateCharacterFilterLanguage('ja');
@@ -329,6 +347,24 @@ function initLanguageToggle() {
         
         // UI言語を更新
         updateUILanguage('en');
+        
+        // 現在れきちずを表示している場合は再読み込み
+        const rekichizuBtn = document.getElementById('map-rekichizu');
+        if (rekichizuBtn && rekichizuBtn.classList.contains('active')) {
+            if (typeof changeBaseMapStyle === 'function') {
+                changeBaseMapStyle('rekichizu');
+            }
+        }
+        
+        // 現在地理院タイル（標準地図またはEnglish）を表示している場合は再読み込み
+        const gsiStdBtn = document.getElementById('map-gsi-std');
+        const gsiEnglishBtn = document.getElementById('map-gsi-english');
+        if ((gsiStdBtn && gsiStdBtn.classList.contains('active')) ||
+            (gsiEnglishBtn && gsiEnglishBtn.classList.contains('active'))) {
+            if (typeof changeBaseMapStyle === 'function') {
+                changeBaseMapStyle('gsi-std');
+            }
+        }
         
         // キャラクターフィルタの言語を更新
         if (typeof updateCharacterFilterLanguage === 'function') {
@@ -530,9 +566,12 @@ function initBaseMapToggle() {
             // クリックされたボタンにactiveクラスを追加
             button.classList.add('active');
             
+            // gsi-englishボタンは実際にはgsi-stdスタイルを使用（言語に応じて自動切り替え）
+            const actualStyleKey = styleKey === 'gsi-english' ? 'gsi-std' : styleKey;
+            
             // 地図スタイルを変更
             if (typeof changeBaseMapStyle === 'function') {
-                changeBaseMapStyle(styleKey);
+                changeBaseMapStyle(actualStyleKey);
             }
         });
     });

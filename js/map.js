@@ -7,11 +7,75 @@ const mapLogger = getLogger('Map');
 // グローバル変数
 let map = null;
 
+/**
+ * れきちずのスタイルURLを取得（言語に応じて切り替え）
+ * @param {string} lang - 言語コード ('ja' または 'en')
+ * @returns {string} - スタイルURL
+ */
+function getRekichizuStyleUrl(lang) {
+    return lang === 'en' 
+        ? 'https://mierune.github.io/rekichizu-style/styles/street/style_en.json'
+        : 'https://mierune.github.io/rekichizu-style/styles/street/style.json';
+}
+
+/**
+ * 現在の言語設定に応じたれきちずスタイルを取得
+ */
+function getCurrentRekichizuStyle() {
+    const currentLang = window.currentLanguage || 'ja';
+    return getRekichizuStyleUrl(currentLang);
+}
+
+/**
+ * 地理院タイルのスタイルを取得（言語に応じて切り替え）
+ * @param {string} lang - 言語コード ('ja' または 'en')
+ * @returns {object} - スタイル定義オブジェクト
+ */
+function getGsiStdStyle(lang) {
+    const isEnglish = lang === 'en';
+    const sourceId = isEnglish ? 'gsi-english' : 'gsi-std';
+    const tiles = isEnglish 
+        ? ['https://cyberjapandata.gsi.go.jp/xyz/english/{z}/{x}/{y}.png']
+        : ['https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'];
+    
+    return {
+        version: 8,
+        sources: {
+            [sourceId]: {
+                type: 'raster',
+                tiles: tiles,
+                tileSize: 256,
+                attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>'
+            }
+        },
+        layers: [
+            {
+                id: sourceId,
+                type: 'raster',
+                source: sourceId,
+                minzoom: 0,
+                maxzoom: 18
+            }
+        ],
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+    };
+}
+
+/**
+ * 現在の言語設定に応じた地理院タイルスタイルを取得
+ */
+function getCurrentGsiStdStyle() {
+    const currentLang = window.currentLanguage || 'ja';
+    return getGsiStdStyle(currentLang);
+}
+
 // 背景地図スタイルの定義
 const BASE_MAP_STYLES = {
     'rekichizu': {
         name: 'れきちず',
-        style: 'https://mierune.github.io/rekichizu-style/styles/street/style.json'
+        get style() {
+            return getCurrentRekichizuStyle();
+        }
     },
     'osm': {
         name: 'OpenStreetMap',
@@ -41,54 +105,8 @@ const BASE_MAP_STYLES = {
     },
     'gsi-std': {
         name: '地理院タイル（標準地図）',
-        style: {
-            version: 8,
-            sources: {
-                'gsi-std': {
-                    type: 'raster',
-                    tiles: [
-                        'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
-                    ],
-                    tileSize: 256,
-                    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>'
-                }
-            },
-            layers: [
-                {
-                    id: 'gsi-std',
-                    type: 'raster',
-                    source: 'gsi-std',
-                    minzoom: 0,
-                    maxzoom: 18
-                }
-            ],
-            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
-        }
-    },
-    'gsi-english': {
-        name: 'GSI English Map',
-        style: {
-            version: 8,
-            sources: {
-                'gsi-english': {
-                    type: 'raster',
-                    tiles: [
-                        'https://cyberjapandata.gsi.go.jp/xyz/english/{z}/{x}/{y}.png'
-                    ],
-                    tileSize: 256,
-                    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">GSI Tiles</a>'
-                }
-            },
-            layers: [
-                {
-                    id: 'gsi-english',
-                    type: 'raster',
-                    source: 'gsi-english',
-                    minzoom: 0,
-                    maxzoom: 18
-                }
-            ],
-            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+        get style() {
+            return getCurrentGsiStdStyle();
         }
     },
     'gsi-seamless': {
@@ -238,7 +256,8 @@ function changeBaseMapStyle(styleKey) {
         return;
     }
     
-    mapLogger.info(`背景地図を切り替え: ${styleKey}`);
+    const currentLang = window.currentLanguage || 'ja';
+    mapLogger.info(`背景地図を切り替え: ${styleKey} (言語: ${currentLang})`);
     
     // 背景色を変更
     document.body.style.backgroundColor = styleKey === 'ryoseikoku' ? '#264348' : '#C9BA96';
@@ -293,11 +312,17 @@ function changeBaseMapStyle(styleKey) {
         });
     }
     
-    // 既存の背景レイヤーとソースを削除
+    // 既存の背景レイヤーとソースを削除（必ず削除して再構築）
     const backgroundIds = ['osm', 'gsi-std', 'gsi-english', 'gsi-seamless'];
     backgroundIds.forEach(id => {
-        if (map.getLayer(id)) map.removeLayer(id);
-        if (map.getSource(id)) map.removeSource(id);
+        if (map.getLayer(id)) {
+            mapLogger.debug(`Removing layer: ${id}`);
+            map.removeLayer(id);
+        }
+        if (map.getSource(id)) {
+            mapLogger.debug(`Removing source: ${id}`);
+            map.removeSource(id);
+        }
     });
     
     // 令制国レイヤーの表示/非表示を制御
@@ -324,18 +349,24 @@ function changeBaseMapStyle(styleKey) {
     
     // ラスタータイル背景（OSM、地理院タイル）の場合
     const newStyle = styleConfig.style;
-    const sourceKey = Object.keys(newStyle.sources)[0];
-    const layerConfig = newStyle.layers[0];
     
-    // 新しい背景ソースを追加
-    if (!map.getSource(sourceKey)) {
-        map.addSource(sourceKey, newStyle.sources[sourceKey]);
-    }
-    
-    // 新しい背景レイヤーを追加（最下層に配置）
-    if (!map.getLayer(layerConfig.id)) {
-        const firstLayer = map.getStyle().layers[0];
-        map.addLayer(layerConfig, firstLayer ? firstLayer.id : undefined);
+    // スタイルがオブジェクトの場合（ラスタータイル）
+    if (typeof newStyle === 'object' && newStyle.sources) {
+        const sourceKey = Object.keys(newStyle.sources)[0];
+        const layerConfig = newStyle.layers[0];
+        
+        mapLogger.debug(`Adding source: ${sourceKey}, layer: ${layerConfig.id}`);
+        
+        // 新しい背景ソースを追加
+        if (!map.getSource(sourceKey)) {
+            map.addSource(sourceKey, newStyle.sources[sourceKey]);
+        }
+        
+        // 新しい背景レイヤーを追加（最下層に配置）
+        if (!map.getLayer(layerConfig.id)) {
+            const firstLayer = map.getStyle().layers[0];
+            map.addLayer(layerConfig, firstLayer ? firstLayer.id : undefined);
+        }
     }
     
     // ルートとシュクバレイヤーを再追加して最前面に

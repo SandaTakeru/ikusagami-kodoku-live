@@ -1,4 +1,66 @@
 /* ========================================
+   CSS変数定義
+   ======================================== */
+:root {
+    /* カラーパレット */
+    --color-bg-ryoseikoku: #264348;
+    --color-bg-default: #C9BA96;
+    --color-white: #ffffff;
+    --color-dark: #333333;
+    --color-gray-light: #dddddd;
+    --color-gray-medium: #888888;
+    --color-gray-dark: #666666;
+    --color-gray-darker: #555555;
+    --color-border: #e0e0e0;
+    
+    /* 透明度 */
+    --opacity-overlay: 0.95;
+    --opacity-overlay-max: 0.98;
+    --opacity-hover: 0.6;
+    
+    /* サイズ */
+    --header-height: 36px;
+    --menu-width: 280px;
+    --menu-max-height: calc(70vh + 200px);
+    --control-btn-size: 32px;
+    --control-btn-size-lg: 36px;
+    
+    /* スペーシング */
+    --spacing-xs: 4px;
+    --spacing-sm: 6px;
+    --spacing-md: 8px;
+    --spacing-lg: 10px;
+    --spacing-xl: 12px;
+    --spacing-2xl: 16px;
+    --spacing-3xl: 20px;
+    
+    /* 境界線 */
+    --border-radius-sm: 4px;
+    --border-radius-md: 5px;
+    --border-radius-lg: 6px;
+    --border-radius-xl: 10px;
+    --border-width: 2px;
+    
+    /* シャドウ */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.25);
+    
+    /* トランジション */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.4s ease;
+    
+    /* フォント */
+    --font-size-xs: 12px;
+    --font-size-sm: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 22px;
+}
+
+/* ========================================
    基本設定
    ======================================== */
 * {
@@ -12,7 +74,7 @@ body {
     overflow: hidden;
     width: 100vw;
     height: 100vh;
-    background-color: #C9BA96;
+    background-color: var(--color-bg-default);
     touch-action: pan-x pan-y;
     -ms-touch-action: pan-x pan-y;
 }
@@ -61,10 +123,10 @@ button {
     left: 66px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    height: 36px;
+    gap: var(--spacing-sm);
+    height: var(--header-height);
     z-index: 2000;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-normal);
 }
 
 .site-header:hover {
@@ -72,12 +134,12 @@ button {
 }
 
 .site-title {
-    font-size: 22px;
+    font-size: var(--font-size-2xl);
     font-weight: 600;
-    color: rgba(51, 51, 51, 0.6);
+    color: rgba(51, 51, 51, var(--opacity-hover));
     margin: 0;
     letter-spacing: 0.5px;
-    transition: color 0.3s ease;
+    transition: color var(--transition-normal);
 }
 
 .site-header:hover .site-title {
@@ -92,11 +154,11 @@ button {
     height: 20px;
     border-radius: 50%;
     background: none;
-    color: rgba(51, 51, 51, 0.6);
+    color: rgba(51, 51, 51, var(--opacity-hover));
     text-decoration: none;
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
 }
 
 .info-icon:hover {

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="イクサガミ蠱毒Liveは、小説『イクサガミ』の舞台となった明治11年の日本を地図上で可視化し、キャラクターの動きを追跡できるインタラクティブマップです。">
     <title>イクサガミ蠱毒Live β</title>
     
     <!-- Favicon -->
@@ -18,72 +19,72 @@
 </head>
 <body>
     <!-- Map Container -->
-    <div id="map"></div>
+    <div id="map" role="application" aria-label="インタラクティブマップ"></div>
     
     <!-- Site Title -->
-    <div class="site-header">
+    <header class="site-header">
         <h1 class="site-title">イクサガミ蠱毒Live β</h1>
-        <a href="#" id="info-link" class="info-icon" title="このサイトについて">ⓘ</a>
-    </div>
+        <a href="#" id="info-link" class="info-icon" title="このサイトについて" aria-label="このサイトについて">ⓘ</a>
+    </header>
     
     <!-- Hamburger Menu -->
-    <div id="menu-container">
-        <button id="hamburger-btn" class="hamburger-btn">
+    <nav id="menu-container" aria-label="メインメニュー">
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu-panel">
             <span></span>
             <span></span>
             <span></span>
         </button>
         
-        <div id="menu-panel" class="menu-panel">
+        <div id="menu-panel" class="menu-panel" role="menu">
             <!-- ネタバレフィルタ -->
-            <div class="menu-section">
+            <section class="menu-section">
                 <h4>ネタバレフィルタ</h4>
-                <select id="spoiler-filter" class="spoiler-select">
+                <select id="spoiler-filter" class="spoiler-select" aria-label="ネタバレフィルタ">
                     <option value="1">イクサガミ天（1巻読了）</option>
                     <option value="2">イクサガミ地（2巻読了）</option>
                     <option value="3">イクサガミ人（3巻読了）</option>
                     <option value="4" selected>イクサガミ神（4巻読了）</option>
                 </select>
-            </div>
+            </section>
             
             <!-- 日英トグル -->
-            <div class="menu-section">
+            <section class="menu-section">
                 <h4>言語 / Language</h4>
-                <div class="toggle-switch">
-                    <button id="lang-ja" class="toggle-btn active">日本語</button>
-                    <button id="lang-en" class="toggle-btn">English</button>
+                <div class="toggle-switch" role="radiogroup" aria-label="言語選択">
+                    <button id="lang-ja" class="toggle-btn active" role="radio" aria-checked="true">日本語</button>
+                    <button id="lang-en" class="toggle-btn" role="radio" aria-checked="false">English</button>
                 </div>
-            </div>
+            </section>
             
             <!-- 背景地図切り替え -->
-            <div class="menu-section">
+            <section class="menu-section">
                 <h4>背景地図 / Base Map</h4>
-                <div class="map-toggle">
-                    <button id="map-ryoseikoku" class="toggle-btn active">令制国</button>
-                    <button id="map-none" class="toggle-btn">背景なし</button>
-                    <button id="map-rekichizu" class="toggle-btn">れきちず</button>
-                    <button id="map-osm" class="toggle-btn">OSM</button>
-                    <button id="map-gsi-std" class="toggle-btn">地理院タイル<br/>標準地図</button>
-                    <button id="map-gsi-english" class="toggle-btn" style="display:none;">GSI<br/>English</button>
-                    <button id="map-gsi-seamless" class="toggle-btn">地理院タイル<br/>全国最新写真</button>
+                <div class="map-toggle" role="radiogroup" aria-label="背景地図選択">
+                    <button id="map-ryoseikoku" class="toggle-btn active" role="radio" aria-checked="true">令制国</button>
+                    <button id="map-none" class="toggle-btn" role="radio" aria-checked="false">背景なし</button>
+                    <button id="map-rekichizu" class="toggle-btn" role="radio" aria-checked="false">れきちず</button>
+                    <button id="map-osm" class="toggle-btn" role="radio" aria-checked="false">OSM</button>
+                    <button id="map-gsi-std" class="toggle-btn" role="radio" aria-checked="false">地理院タイル<br/>標準地図</button>
+                    <button id="map-gsi-english" class="toggle-btn" role="radio" aria-checked="false" style="display:none;">GSI<br/>English</button>
+                    <button id="map-gsi-seamless" class="toggle-btn" role="radio" aria-checked="false">地理院タイル<br/>全国最新写真</button>
                 </div>
-            </div>
+            </section>
             
             <!-- キャラクタフィルタ -->
-            <div class="menu-section">
+            <section class="menu-section">
                 <h4>キャラクターフィルタ</h4>
-                <div id="character-filters">
+                <div id="character-filters" role="group" aria-label="キャラクター選択">
                     <!-- キャラクターのチェックボックスをJSで動的に生成 -->
                 </div>
-            </div>
+            </section>
         </div>
-    </div>
+    </nav>
     
     <!-- Character Tracking Card -->
-    <div id="tracking-card" class="tracking-card" style="display: none;">
-        <button id="tracking-prev" class="tracking-nav tracking-nav-prev" title="前のキャラクター">◀</button>
-        <button id="tracking-next" class="tracking-nav tracking-nav-next" title="次のキャラクター">▶</button>
-        <button id="tracking-close" class="tracking-close" title="閉じる">×</button>
+    <aside id="tracking-card" class="tracking-card" style="display: none;" role="complementary" aria-label="キャラクター情報">
+        <button id="tracking-prev" class="tracking-nav tracking-nav-prev" title="前のキャラクター" aria-label="前のキャラクター">◀</button>
+        <button id="tracking-next" class="tracking-nav tracking-nav-next" title="次のキャラクター" aria-label="次のキャラクター">▶</button>
+        <button id="tracking-close" class="tracking-close" title="閉じる" aria-label="トラッキングカードを閉じる">×</button>
         <div class="tracking-content">
             <div class="tracking-header">
                 <span id="tracking-id" class="tracking-id">木札</span>
@@ -96,25 +97,29 @@
                 </div>
             </div>
         </div>
-    </div>
+    </aside>
 
     <!-- Timeline Slider -->
-    <div id="timeline-container" class="timeline-container">
-        <button id="speed-down" class="control-btn" title="速度ダウン">◀◀</button>
-        <button id="play-btn" class="control-btn" title="再生/一時停止">
+    <section id="timeline-container" class="timeline-container" role="region" aria-label="タイムラインコントロール">
+        <button id="speed-down" class="control-btn" title="速度ダウン" aria-label="再生速度を下げる">◀◀</button>
+        <button id="play-btn" class="control-btn" title="再生/一時停止" aria-label="再生/一時停止">
             <span class="icon-play">▶</span>
             <span class="icon-pause" style="display:none;">■</span>
         </button>
-        <button id="speed-up" class="control-btn" title="速度アップ">▶▶</button>
+        <button id="speed-up" class="control-btn" title="速度アップ" aria-label="再生速度を上げる">▶▶</button>
         <input type="range" id="timeline-slider" class="timeline-slider" 
-               min="0" max="100" value="0" step="any">
-        <div id="speed-display" class="speed-display">×60</div>
-        <div id="current-datetime" class="current-datetime">
+               min="0" max="100" value="0" step="any" 
+               aria-label="タイムラインスライダー" 
+               aria-valuemin="0" 
+               aria-valuemax="100" 
+               aria-valuenow="0">
+        <div id="speed-display" class="speed-display" aria-live="polite">×60</div>
+        <div id="current-datetime" class="current-datetime" aria-live="polite" aria-atomic="true">
             <div class="datetime-date">明治11年05月05日</div>
             <div class="datetime-time">午前00時00分</div>
         </div>
-        <div id="astronomy-icon" class="astronomy-icon" title="日中">☀️</div>
-    </div>
+        <div id="astronomy-icon" class="astronomy-icon" title="日中" aria-label="天体状態: 日中">☀️</div>
+    </section>
     
     <!-- JavaScript Modules -->
     <script src="js/config.js"></script>
@@ -122,6 +127,7 @@
     
     <!-- Utility Functions (Logger must be loaded first) -->
     <script src="js/utils/logger.js"></script>
+    <script src="js/utils/constants.js"></script>
     <script src="js/utils/geometryUtils.js"></script>
     <script src="js/utils/interpolationUtils.js"></script>
     
