@@ -7,7 +7,7 @@
  */
 window.UI_TEXTS = {
     ja: {
-        siteTitle: 'イクサガミ蠱毒Live β',
+        siteTitle: 'イクサガミ蠱毒Live β<br/><span style="font-size: 0.45em; font-weight: normal; opacity: 0.8; white-space: nowrap;">非公式ファンサイト（ネタバレ注意）</span>',
         spoilerFilterTitle: 'ネタバレフィルタ',
         spoilerOptions: [
             'イクサガミ天（1巻読了）',
@@ -42,7 +42,7 @@ window.UI_TEXTS = {
         months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
     },
     en: {
-        siteTitle: 'Last Samurai Standing<br>Kodoku Live β',
+        siteTitle: 'Last Samurai Standing<br>Kodoku Live β<br/><span style="font-size: 0.45em; font-weight: normal; opacity: 0.8; white-space: nowrap;">Unofficial Fan Site (Spoilers)</span>',
         spoilerFilterTitle: 'Spoiler Filter',
         spoilerOptions: [
             'Last Samurai Standing TEN (Vol.1)',
